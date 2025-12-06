@@ -1,0 +1,4829 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camarim - Sistema de Gestão</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- QR Code library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- jsPDF library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- html2canvas library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"></script>
+    <!-- Após as outras bibliotecas -->
+    <script src="database.js"></script>
+    <!-- Após database.js -->
+    <script src="migration-final.js"></script>
+        <style>
+        :root {
+            --primary: #1a1a2e;
+            --primary-dark: #1a1a2e;
+            --secondary: #ff6b8b;
+            --success: #4CAF50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--box-shadow);
+            z-index: 100;
+        }
+
+        .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo span {
+            color: var(--secondary);
+        }
+
+        .nav-menu {
+            flex: 1;
+        }
+
+        .nav-item {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            transition: var(--transition);
+            border-left: 4px solid transparent;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-left-color: var(--secondary);
+            color: white;
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            width: 24px;
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+
+        .quick-actions {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary, .btn-secondary {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            text-decoration: none;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #ff5252;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .header h2 {
+            color: var(--dark);
+            font-size: 1.8rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #3d8b40;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #e68900;
+        }
+
+        .btn-info {
+            background-color: #ff6b8b;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #1a1a2e;
+        }
+
+        .btn-light {
+            background-color: var(--light);
+            color: var(--dark);
+            border: 1px solid #ddd;
+        }
+
+        .btn-light:hover {
+            background-color: #e2e6ea;
+        }
+
+        /* Dashboard */
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .card-1 .card-icon {
+            background-color: rgba(138, 43, 226, 0.1);
+            color: var(--primary);
+        }
+
+        .card-2 .card-icon {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success);
+        }
+
+        .card-3 .card-icon {
+            background-color: rgba(255, 152, 0, 0.1);
+            color: var(--warning);
+        }
+
+        .card-4 .card-icon {
+            background-color: rgba(255, 107, 107, 0.1);
+            color: var(--secondary);
+        }
+
+        .card h3 {
+            font-size: 1rem;
+            color: var(--gray);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .card-change {
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .positive {
+            color: var(--success);
+        }
+
+        .negative {
+            color: var(--danger);
+        }
+
+        /* Tables */
+        .table-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: var(--light);
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid var(--light-gray);
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        tr:hover {
+            background-color: rgba(138, 43, 226, 0.03);
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Forms */
+        .form-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.2);
+        }
+
+        .form-text {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+
+        .calculation-box {
+            background-color: rgba(138, 43, 226, 0.05);
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        .calculation-box h4 {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .calculation-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        .calculation-row.total {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary);
+            border-bottom: none;
+            margin-top: 10px;
+            padding-top: 15px;
+            border-top: 2px solid #ddd;
+        }
+
+        /* Sale Cart */
+        .cart-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .cart-items {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+        }
+
+        .cart-summary {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            align-self: start;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item-info h4 {
+            margin-bottom: 5px;
+        }
+
+        .cart-item-info .code {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .cart-item-quantity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .quantity-btn:hover {
+            background-color: var(--light);
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        .summary-row.total {
+            font-weight: 700;
+            font-size: 1.3rem;
+            border-bottom: none;
+            margin-top: 10px;
+            padding-top: 15px;
+            border-top: 2px solid #ddd;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-large .modal-content {
+            max-width: 800px;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            color: var(--dark);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-error {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        /* Charts */
+        .chart-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-title {
+            margin-bottom: 20px;
+            color: var(--dark);
+            font-size: 1.3rem;
+        }
+
+        .chart-wrapper {
+            height: 300px;
+            position: relative;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 10px 0;
+            }
+            
+            .nav-menu {
+                display: flex;
+                overflow-x: auto;
+                padding: 0 10px;
+            }
+            
+            .nav-item {
+                padding: 10px 15px;
+                white-space: nowrap;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+            }
+            
+            .nav-item.active {
+                border-left: none;
+                border-bottom-color: var(--secondary);
+            }
+            
+            .quick-actions {
+                display: none;
+            }
+            
+            .cart-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* Utilities */
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        .d-none {
+            display: none;
+        }
+
+        .currency::before {
+            content: 'R$ ';
+        }
+
+        .percentage::after {
+            content: '%';
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success);
+        }
+
+        .badge-warning {
+            background-color: rgba(255, 152, 0, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-danger {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--danger);
+        }
+
+        /* Pix QR Code */
+        .pix-qr-code {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .pix-qr-code canvas {
+            max-width: 250px;
+            height: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: white;
+        }
+
+        .pix-copy-code {
+            margin-top: 15px;
+        }
+
+        .pix-code {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            font-family: monospace;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+
+        /* Receipt Styles */
+        #receipt-content {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            font-family: 'Courier New', monospace;
+        }
+
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+        }
+
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .receipt-total {
+            border-top: 2px solid #000;
+            margin-top: 10px;
+            padding-top: 10px;
+            font-weight: bold;
+        }
+
+        .receipt-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* Adicione isso no seu arquivo CSS */
+#filter-products,
+#export-products,
+button[data-view="new-product"] {
+    height: 36px !important; /* Ajuste este valor conforme necessário */
+    padding: 0.375rem 0.75rem !important;
+    line-height: 1.5 !important;
+    border-width: 1px !important;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>CAMAR<span>IM</span></h1>
+                <p>Makeup & Skincare</p>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#dashboard" class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="#products" class="nav-item" data-view="products">
+                    <i class="fas fa-boxes"></i> Produtos
+                </a>
+                <a href="#new-product" class="nav-item" data-view="new-product">
+                    <i class="fas fa-plus-circle"></i> Cadastrar Produto
+                </a>
+                <a href="#sales" class="nav-item" data-view="sales">
+                    <i class="fas fa-shopping-cart"></i> Vendas
+                </a>
+                <a href="#new-sale" class="nav-item" data-view="new-sale">
+                    <i class="fas fa-cash-register"></i> Nova Venda
+                </a>
+                <a href="#reports" class="nav-item" data-view="reports">
+                    <i class="fas fa-chart-bar"></i> Relatórios
+                </a>
+                <a href="#settings" class="nav-item" data-view="settings">
+                    <i class="fas fa-cog"></i> Configurações
+                </a>
+            </nav>
+            
+            <div class="quick-actions">
+                <a href="#new-sale" class="btn-primary" data-view="new-sale">
+                    <i class="fas fa-cash-register"></i> Nova Venda
+                </a>
+                <a href="#new-product" class="btn-secondary" data-view="new-product">
+                    <i class="fas fa-plus"></i> Novo Produto
+                </a>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header will be dynamically updated -->
+            <div class="header">
+                <h2 id="page-title">Dashboard</h2>
+                <div class="header-actions" id="header-actions">
+                    <button class="btn btn-light" id="export-btn">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="btn btn-info" id="import-btn">
+                        <i class="fas fa-upload"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Views Container -->
+            <div id="view-container">
+                <!-- Dashboard View -->
+                <div id="dashboard-view" class="view">
+                    <div class="dashboard-cards">
+                        <div class="card card-1">
+                            <div class="card-icon">
+                                <i class="fas fa-boxes"></i>
+                            </div>
+                            <h3>Produtos Cadastrados</h3>
+                            <div class="card-value" id="total-products">0</div>
+                            <div class="card-change positive">
+                                <i class="fas fa-arrow-up"></i> 5% em relação ao mês anterior
+                            </div>
+                        </div>
+                        
+                        <div class="card card-2">
+                            <div class="card-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <h3>Vendas Hoje</h3>
+                            <div class="card-value" id="today-sales">0</div>
+                            <div class="card-change positive">
+                                <i class="fas fa-arrow-up"></i> 3 vendas até agora
+                            </div>
+                        </div>
+                        
+                        <div class="card card-3">
+                            <div class="card-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h3>Receita Mensal</h3>
+                            <div class="card-value">
+                                <span class="currency" id="monthly-revenue">0,00</span>
+                            </div>
+                            <div class="card-change positive">
+                                <i class="fas fa-arrow-up"></i> 12% em relação ao mês anterior
+                            </div>
+                        </div>
+                        
+                        <div class="card card-4">
+                            <div class="card-icon">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <h3>Produto Mais Vendido</h3>
+                            <div class="card-value" id="best-seller">-</div>
+                            <div class="card-change">
+                                <span id="best-seller-qty">0</span> unidades vendidas
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3 class="chart-title">Vendas Mensais</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="monthlySalesChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <h3 style="padding: 20px 20px 0;">Vendas Recentes</h3>
+                        <table id="recent-sales-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Venda</th>
+                                    <th>Data/Hora</th>
+                                    <th>Produtos</th>
+                                    <th>Valor Total</th>
+                                    <th>Atendente</th>
+                                    <th>Pagamento</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-sales-body">
+                                <!-- Recent sales will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Products List View -->
+                <div id="products-view" class="view d-none">
+                    <div class="mb-20">
+                        <div class="alert alert-success d-none" id="product-alert">
+                            <i class="fas fa-check-circle"></i>
+                            <span id="alert-message"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="header">
+                        <div class="header-actions">
+                            <button class="btn btn-light btn-lg" id="filter-products">
+                                <i class="fas fa-filter"></i> Filtrar
+                            </button>
+                            <button class="btn btn-success btn-lg" id="export-products">
+                                <i class="fas fa-file-export"></i> Exportar
+                            </button>
+                            <button class="btn btn-primary btn-lg" data-view="new-product">
+                                <i class="fas fa-plus"></i> Novo Produto
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <div style="padding: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
+                            <div class="form-group" style="flex: 1; min-width: 200px;">
+                                <input type="text" class="form-control" id="product-search" placeholder="Buscar por nome ou código...">
+                            </div>
+                            <div class="form-group" style="width: 180px;">
+                                <select class="form-control" id="category-filter">
+                                    <option value="">Categorias</option>
+                                    <option value="Shoes">Sapatos</option>
+                                    <option value="Belts">Cintos</option>
+                                    <option value="Bags">Bolsas</option>
+                                    <option value="Activewear">Roupas Esportivas</option>
+                                    <option value="Makeup">Maquiagem</option>
+                                    <option value="Skincare">Skincare</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <table id="products-table">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nome</th>
+                                    <th>Categoria</th>
+                                    <th>Custo de Compra</th>
+                                    <th>CMV</th>
+                                    <th>Markup</th>
+                                    <th>Preço Sugerido</th>
+                                    <th>Preço de Venda</th>
+                                    <th>Estoque</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-body">
+                                <!-- Products will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- New Product View -->
+                <div id="new-product-view" class="view d-none">
+                    <div class="mb-20">
+                        <div class="alert alert-success d-none" id="new-product-alert">
+                            <i class="fas fa-check-circle"></i>
+                            <span id="new-alert-message"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="header">
+                        <div class="header-actions">
+                            <button class="btn btn-light" data-view="products">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-container">
+                        <form id="product-form">
+                            <input type="hidden" id="product-id">
+                            <input type="hidden" id="is-edit" value="false">
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="product-name">Nome do Produto *</label>
+                                    <input type="text" id="product-name" class="form-control" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="product-category">Categoria *</label>
+                                    <select id="product-category" class="form-control" required>
+                                        <option value="">Selecione uma categoria</option>
+                                        <option value="Shoes">Sapatos</option>
+                                        <option value="Belts">Cintos</option>
+                                        <option value="Bags">Bolsas</option>
+                                        <option value="Activewear">Roupas Esportivas</option>
+                                        <option value="Makeup">Maquiagem</option>
+                                        <option value="Skincare">Skincare</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="purchase-cost">Custo de Compra (R$) *</label>
+                                    <input type="number" id="purchase-cost" class="form-control" step="0.01" min="0" required>
+                                    <div class="form-text">Valor pago pelo produto</div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="shipping-cost">Custo de Frete (R$) *</label>
+                                    <input type="number" id="shipping-cost" class="form-control" step="0.01" min="0" required>
+                                    <div class="form-text">Custo do frete para receber o produto</div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="operational-expenses">Despesas Operacionais Mensais (R$)</label>
+                                    <input type="number" id="operational-expenses" class="form-control" step="0.01" min="0" value="4000">
+                                    <div class="form-text">Despesas fixas mensais da loja</div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="expected-sales">Volume de Vendas Mensal Esperado *</label>
+                                    <input type="number" id="expected-sales" class="form-control" min="1" required value="100">
+                                    <div class="form-text">Quantidade esperada de vendas por mês</div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="variable-fees">Taxas Variáveis (%)</label>
+                                    <input type="number" id="variable-fees" class="form-control" step="0.1" min="0" value="9.5">
+                                    <div class="form-text">Taxas de cartão + comissões (padrão: 9.5%)</div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="taxes">Impostos (%)</label>
+                                    <input type="number" id="taxes" class="form-control" step="0.1" min="0" value="6">
+                                    <div class="form-text">Impostos sobre a venda (padrão: 6%)</div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="profit-margin">Margem de Lucro Desejada (%)</label>
+                                    <input type="number" id="profit-margin" class="form-control" step="0.1" min="0" value="40">
+                                    <div class="form-text">Margem de lucro desejada (padrão: 40%)</div>
+                                </div>
+                            </div>
+                            
+                            <div class="calculation-box">
+                                <h4>Cálculo do Preço Sugerido</h4>
+                                
+                                <div class="calculation-row">
+                                    <span>Custo de Compra:</span>
+                                    <span id="calc-purchase-cost" class="currency">0,00</span>
+                                </div>
+                                
+                                <div class="calculation-row">
+                                    <span>+ Custo de Frete:</span>
+                                    <span id="calc-shipping-cost" class="currency">0,00</span>
+                                </div>
+                                
+                                <div class="calculation-row">
+                                    <span>+ Custo Operacional Proporcional:</span>
+                                    <span id="calc-operational-cost" class="currency">0,00</span>
+                                </div>
+                                
+                                <div class="calculation-row">
+                                    <span><strong>CMV (Custo Mercadoria Vendida):</strong></span>
+                                    <span id="calc-cmv" class="currency"><strong>0,00</strong></span>
+                                </div>
+                                
+                                <div class="calculation-row">
+                                    <span>Taxas Variáveis:</span>
+                                    <span id="calc-variable-fees" class="percentage">0,00</span>
+                                </div>
+                                
+                                <div class="calculation-row">
+                                    <span>+ Impostos:</span>
+                                    <span id="calc-taxes" class="percentage">0,00</span>
+                                </div>
+                                
+                                <div class="calculation-row">
+                                    <span>+ Margem de Lucro:</span>
+                                    <span id="calc-profit-margin" class="percentage">0,00</span>
+                                </div>
+                                
+                                <div class="calculation-row">
+                                    <span><strong>Markup:</strong></span>
+                                    <span id="calc-markup"><strong>0,00</strong></span>
+                                </div>
+                                
+                                <div class="calculation-row total">
+                                    <span>PREÇO SUGERIDO:</span>
+                                    <span id="calc-suggested-price" class="currency"><strong>0,00</strong></span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="selling-price">Preço de Venda (R$) *</label>
+                                    <input type="number" id="selling-price" class="form-control" step="0.01" min="0" required>
+                                    <div class="form-text">Preço real de venda (pode ser ajustado)</div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="initial-stock">Estoque *</label>
+                                    <input type="number" id="initial-stock" class="form-control" min="0" required value="10">
+                                    <div class="form-text">Quantidade em estoque</div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-right mt-20">
+                                <button type="button" class="btn btn-light" data-view="products">Cancelar</button>
+                                <button type="submit" class="btn btn-success" id="product-form-submit">Salvar Produto</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Sales List View -->
+                <div id="sales-view" class="view d-none">
+                    <div class="header">
+                        <div class="header-actions">
+                            <button class="btn btn-light" id="filter-sales">
+                                <i class="fas fa-calendar-alt"></i> Filtrar por Data
+                            </button>
+                            <button class="btn btn-success" data-view="new-sale">
+                                <i class="fas fa-cash-register"></i> Nova Venda
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="sales-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Venda</th>
+                                    <th>Data/Hora</th>
+                                    <th>Produtos</th>
+                                    <th>Quantidade</th>
+                                    <th>Valor Total</th>
+                                    <th>Atendente</th>
+                                    <th>Pagamento</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-body">
+                                <!-- Sales will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- New Sale View -->
+                <div id="new-sale-view" class="view d-none">
+                    <div class="header">
+                        <div class="header-actions">
+                            <button class="btn btn-light" data-view="sales">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="cart-container">
+                        <div class="cart-items">
+                            <h3 style="margin-bottom: 20px;">Produtos</h3>
+                            
+                            <div class="form-group mb-20">
+                                <input type="text" class="form-control" id="sale-product-search" placeholder="Buscar produto por nome ou código...">
+                            </div>
+                            
+                            <div id="sale-products-list">
+                                <!-- Products for sale will be listed here -->
+                            </div>
+                            
+                            <div id="sale-cart">
+                                <!-- Cart items will be displayed here -->
+                            </div>
+                            
+                            <div id="empty-cart-message" class="text-center" style="padding: 40px; color: var(--gray);">
+                                <i class="fas fa-shopping-cart fa-3x mb-20"></i>
+                                <h4>Carrinho vazio</h4>
+                                <p>Adicione produtos usando a busca acima</p>
+                            </div>
+                        </div>
+                        
+                        <div class="cart-summary">
+                            <h3 style="margin-bottom: 20px;">Resumo da Venda</h3>
+                            
+                            <div class="form-group" style="margin: 15px 0;">
+                                <label for="attendant">Atendente *</label>
+                                <select id="attendant" class="form-control" required>
+                                    <option value="">Selecione o atendente</option>
+                                    <option value="Gabryella">Gabryella</option>
+                                    <option value="Guilherme">Guilherme</option>
+                                    <option value="Outro">Outro</option>
+                                </select>
+                            </div>
+                            
+                            <div class="summary-row">
+                                <span>Subtotal:</span>
+                                <span id="cart-subtotal" class="currency">0,00</span>
+                            </div>
+                            
+                            <div class="form-group" style="margin: 15px 0;">
+                                <label for="sale-discount">Desconto (R$)</label>
+                                <input type="number" id="sale-discount" class="form-control" step="0.01" min="0" value="0">
+                            </div>
+                            
+                            <div class="form-group" style="margin: 15px 0;">
+                                <label for="payment-method">Método de Pagamento</label>
+                                <select id="payment-method" class="form-control">
+                                    <option value="cash">Dinheiro</option>
+                                    <option value="pix">Pix</option>
+                                    <option value="debit">Cartão de Débito</option>
+                                    <option value="credit">Cartão de Crédito</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group d-none" id="card-fee-container" style="margin: 15px 0;">
+                                <label for="card-fee">Taxa do Cartão (%)</label>
+                                <input type="number" id="card-fee" class="form-control" step="0.1" min="0" value="3.5">
+                                <div class="form-text" id="card-fee-info">Taxa para cartão de débito: 2% | Crédito: 4.5%</div>
+                            </div>
+                            
+                            <div class="summary-row">
+                                <span>Desconto:</span>
+                                <span id="cart-discount" class="currency">0,00</span>
+                            </div>
+                            
+                            <div class="summary-row d-none" id="cart-fees-row">
+                                <span>Taxas:</span>
+                                <span id="cart-fees" class="currency">0,00</span>
+                            </div>
+                            
+                            <div class="summary-row total">
+                                <span>TOTAL:</span>
+                                <span id="cart-total" class="currency">0,00</span>
+                            </div>
+                            
+                            <button class="btn btn-success btn-block" style="margin-top: 20px; padding: 15px;" id="complete-sale">
+                                <i class="fas fa-check-circle"></i> Finalizar Venda
+                            </button>
+                            
+                            <button class="btn btn-light btn-block" style="margin-top: 10px;" id="clear-cart">
+                                <i class="fas fa-trash"></i> Limpar Carrinho
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Reports View -->
+                <div id="reports-view" class="view d-none">
+                    <div class="header">
+                        <div class="header-actions">
+                            <button class="btn btn-success" id="generate-pdf-report">
+                                <i class="fas fa-file-pdf"></i> Gerar PDF
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-cards">
+                        <div class="card card-1">
+                            <div class="card-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <h3>Receita Total</h3>
+                            <div class="card-value">
+                                <span class="currency" id="report-revenue">0,00</span>
+                            </div>
+                            <div class="card-change">
+                                Últimos 30 dias
+                            </div>
+                        </div>
+                        
+                        <div class="card card-2">
+                            <div class="card-icon">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <h3>Custo Total</h3>
+                            <div class="card-value">
+                                <span class="currency" id="report-cost">0,00</span>
+                            </div>
+                            <div class="card-change">
+                                Últimos 30 dias
+                            </div>
+                        </div>
+                        
+                        <div class="card card-3">
+                            <div class="card-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h3>Lucro Líquido</h3>
+                            <div class="card-value">
+                                <span class="currency" id="report-profit">0,00</span>
+                            </div>
+                            <div class="card-change positive">
+                                <i class="fas fa-arrow-up"></i> 15% margem
+                            </div>
+                        </div>
+                        
+                        <div class="card card-4">
+                            <div class="card-icon">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <h3>Produtos com Baixo Estoque</h3>
+                            <div class="card-value" id="low-stock-count">0</div>
+                            <div class="card-change">
+                                <span id="low-stock-list"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3 class="chart-title">Desempenho por Categoria</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <h3 style="padding: 20px 20px 0;">Top 10 Produtos Mais Vendidos</h3>
+                        <table id="top-products-table">
+                            <thead>
+                                <tr>
+                                    <th>Posição</th>
+                                    <th>Produto</th>
+                                    <th>Categoria</th>
+                                    <th>Quantidade Vendida</th>
+                                    <th>Receita Gerada</th>
+                                    <th>Lucro</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-products-body">
+                                <!-- Top products will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Settings View -->
+                <div id="settings-view" class="view d-none">
+                    <div class="header">
+                        <button class="btn btn-light" data-view="dashboard">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </button>
+                    </div>
+                    
+                    <div class="form-container">
+                        <h3 style="margin-bottom: 20px;">Configurações Padrão</h3>
+                        
+                        <form id="settings-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="default-debit-fee">Taxa Cartão Débito (%)</label>
+                                    <input type="number" id="default-debit-fee" class="form-control" step="0.1" min="0" value="2.0">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="default-credit-fee">Taxa Cartão Crédito (%)</label>
+                                    <input type="number" id="default-credit-fee" class="form-control" step="0.1" min="0" value="4.5">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="default-tax">Imposto Padrão (%)</label>
+                                    <input type="number" id="default-tax" class="form-control" step="0.1" min="0" value="6">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="default-margin">Margem de Lucro Padrão (%)</label>
+                                    <input type="number" id="default-margin" class="form-control" step="0.1" min="0" value="40">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="monthly-expenses">Despesas Operacionais Mensais (R$)</label>
+                                    <input type="number" id="monthly-expenses" class="form-control" step="0.01" min="0" value="4000">
+                                </div>
+                            </div>
+                            
+                            <h3 style="margin: 30px 0 20px;">Gerenciamento de Dados</h3>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Exportar Dados</label>
+                                    <button type="button" class="btn btn-info btn-block" id="export-data-btn">
+                                        <i class="fas fa-download"></i> Exportar para JSON
+                                    </button>
+                                    <div class="form-text">Salve um backup de todos os dados do sistema</div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Importar Dados</label>
+                                    <button type="button" class="btn btn-warning btn-block" id="import-data-btn">
+                                        <i class="fas fa-upload"></i> Importar de JSON
+                                    </button>
+                                    <div class="form-text">Restaurar dados a partir de um backup</div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Limpar Dados</label>
+                                    <button type="button" class="btn btn-danger btn-block" id="clear-data-btn">
+                                        <i class="fas fa-trash"></i> Limpar Todos os Dados
+                                    </button>
+                                    <div class="form-text">Atenção: Esta ação não pode ser desfeita!</div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-right mt-20">
+                                <button type="submit" class="btn btn-success">Salvar Configurações</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modals -->
+    <div class="modal" id="export-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Exportar Dados</h3>
+                <button class="modal-close" data-modal="export-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Clique no botão abaixo para baixar um arquivo JSON com todos os dados do sistema.</p>
+                <div class="form-group mt-20">
+                    <label for="export-type">Tipo de Exportação:</label>
+                    <select id="export-type" class="form-control">
+                        <option value="all">Todos os Dados</option>
+                        <option value="products">Apenas Produtos</option>
+                        <option value="sales">Apenas Vendas</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-modal="export-modal">Cancelar</button>
+                <button class="btn btn-success" id="confirm-export">Exportar</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="import-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Importar Dados</h3>
+                <button class="modal-close" data-modal="import-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Selecione um arquivo JSON para importar dados para o sistema.</p>
+                <div class="form-group mt-20">
+                    <label for="import-file">Arquivo JSON:</label>
+                    <input type="file" id="import-file" class="form-control" accept=".json">
+                </div>
+                <div class="alert alert-error d-none" id="import-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="import-error-message"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-modal="import-modal">Cancelar</button>
+                <button class="btn btn-success" id="confirm-import">Importar</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="delete-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirmar Exclusão</h3>
+                <button class="modal-close" data-modal="delete-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="delete-message">Tem certeza que deseja excluir este item?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-modal="delete-modal">Cancelar</button>
+                <button class="btn btn-danger" id="confirm-delete">Excluir</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="sale-details-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detalhes da Venda</h3>
+                <button class="modal-close" data-modal="sale-details-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="sale-details-content">
+                    <!-- Sale details will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-modal="sale-details-modal">Fechar</button>
+                <button class="btn btn-success" id="print-receipt">
+                    <i class="fas fa-print"></i> Imprimir Recibo
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pix Modal -->
+    <div class="modal" id="pix-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Pagamento via Pix</h3>
+                <button class="modal-close" data-modal="pix-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="pix-content">
+                    <!-- Pix content will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-modal="pix-modal">Cancelar</button>
+                <button class="btn btn-success" id="confirm-pix-payment">
+                    <i class="fas fa-check"></i> Confirmar Pagamento
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Receipt Modal -->
+    <div class="modal" id="receipt-modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Recibo de Venda</h3>
+                <button class="modal-close" data-modal="receipt-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="receipt-content">
+                    <!-- Receipt content will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-modal="receipt-modal">Fechar</button>
+                <button class="btn btn-success" id="print-receipt-btn">
+                    <i class="fas fa-print"></i> Imprimir Recibo
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Report PDF Modal -->
+    <div class="modal" id="pdf-report-modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Gerar Relatório em PDF</h3>
+                <button class="modal-close" data-modal="pdf-report-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-container">
+                    <form id="pdf-report-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="report-type">Tipo de Relatório</label>
+                                <select id="report-type" class="form-control" required>
+                                    <option value="sales">Relatório de Vendas</option>
+                                    <option value="products">Relatório de Produtos</option>
+                                    <option value="financial">Relatório Financeiro</option>
+                                    <option value="inventory">Relatório de Estoque</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="report-period">Período</label>
+                                <select id="report-period" class="form-control" required>
+                                    <option value="today">Hoje</option>
+                                    <option value="yesterday">Ontem</option>
+                                    <option value="last7">Últimos 7 dias</option>
+                                    <option value="last30" selected>Últimos 30 dias</option>
+                                    <option value="thisMonth">Este Mês</option>
+                                    <option value="lastMonth">Mês Anterior</option>
+                                    <option value="thisYear">Este Ano</option>
+                                    <option value="custom">Personalizado</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row d-none" id="custom-date-range">
+                            <div class="form-group">
+                                <label for="start-date">Data Inicial</label>
+                                <input type="date" id="start-date" class="form-control">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="end-date">Data Final</label>
+                                <input type="date" id="end-date" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="report-title">Título do Relatório</label>
+                                <input type="text" id="report-title" class="form-control" placeholder="Ex: Relatório de Vendas - Janeiro 2024">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="include-charts">Incluir Gráficos</label>
+                                <select id="include-charts" class="form-control">
+                                    <option value="yes">Sim</option>
+                                    <option value="no">Não</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="include-tables">Incluir Tabelas</label>
+                                <select id="include-tables" class="form-control">
+                                    <option value="yes">Sim</option>
+                                    <option value="no">Não</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="report-format">Formato</label>
+                                <select id="report-format" class="form-control">
+                                    <option value="A4">A4 (Padrão)</option>
+                                    <option value="A3">A3</option>
+                                    <option value="letter">Carta</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="report-orientation">Orientação</label>
+                                <select id="report-orientation" class="form-control">
+                                    <option value="portrait">Retrato</option>
+                                    <option value="landscape">Paisagem</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-success d-none" id="pdf-report-alert">
+                            <i class="fas fa-check-circle"></i>
+                            <span id="pdf-report-message"></span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-modal="pdf-report-modal">Cancelar</button>
+                <button class="btn btn-success" id="generate-pdf-btn">
+                    <i class="fas fa-file-pdf"></i> Gerar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden file input for data import -->
+    <input type="file" id="file-input" style="display: none;" accept=".json">
+    
+<script>
+// Sistema de Gestão de Vendas - Camarim (Versão com IndexedDB)
+
+// ============================================
+// 1. INICIALIZAÇÃO E CONFIGURAÇÃO
+// ============================================
+
+// Estrutura de dados do sistema
+let systemData = {
+    products: [],
+    sales: [],
+    settings: {
+        defaultDebitFee: 2.0,
+        defaultCreditFee: 4.5,
+        defaultTax: 6,
+        defaultMargin: 40,
+        monthlyOperationalExpenses: 4000,
+        lastProductId: 0,
+        lastSaleId: 0
+    }
+};
+
+// Estado da aplicação
+let appState = {
+    currentView: 'dashboard',
+    currentProductId: null,
+    currentSaleId: null,
+    cart: [],
+    saleInProgress: false,
+    charts: {
+        monthlySales: null,
+        categoryChart: null
+    },
+    currentSaleData: null,
+    databaseReady: false
+};
+
+// ============================================
+// 2. INICIALIZAÇÃO DO SISTEMA
+// ============================================
+
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 Inicializando Sistema Camarim...');
+    
+    // Adicionar view de gerenciamento do banco de dados
+    addDatabaseManagementView();
+    
+    // Inicializar sistema
+    await initSystem();
+    setupEventListeners();
+    
+    // Verificar hash da URL para manter a aba selecionada
+    checkHashAndShowView();
+    
+    // Configurar listener para mudanças de hash
+    window.addEventListener('hashchange', checkHashAndShowView);
+    
+    // Mostrar status do banco de dados
+    showDatabaseStatus();
+});
+
+function checkHashAndShowView() {
+    const hash = window.location.hash.substring(1);
+    const validViews = ['dashboard', 'products', 'new-product', 'sales', 'new-sale', 'reports', 'settings', 'database'];
+    
+    if (hash && validViews.includes(hash)) {
+        showView(hash);
+    } else {
+        showView('dashboard');
+    }
+}
+
+async function initSystem() {
+    console.log('🔄 Carregando dados do sistema...');
+    
+    try {
+        // Verificar se o DatabaseManager está disponível
+        if (typeof databaseManager === 'undefined') {
+            console.warn('⚠️ DatabaseManager não disponível, usando localStorage');
+            loadFromLocalStorage();
+            appState.databaseReady = false;
+            return;
+        }
+        
+        // Esperar inicialização do banco de dados
+        if (!databaseManager.initialized) {
+            console.log('⏳ Aguardando inicialização do banco de dados...');
+            await databaseManager.init();
+        }
+        
+        // Carregar dados do banco
+        const savedData = await databaseManager.getSystemData();
+        
+        if (savedData && typeof savedData === 'object') {
+            systemData = savedData;
+            console.log('✅ Dados carregados do IndexedDB');
+            appState.databaseReady = true;
+            
+            // Verificar se precisa migrar IDs
+            await updateProductIds();
+            await updateSaleIds();
+            
+            // Registrar sucesso
+            await databaseManager.logAudit('system_init_success', {
+                products: systemData.products.length,
+                sales: systemData.sales.length
+            });
+            
+        } else {
+            console.log('📭 Nenhum dado encontrado, criando nova base');
+            createInitialData();
+            appState.databaseReady = true;
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao inicializar sistema:', error);
+        
+        // Fallback para localStorage
+        loadFromLocalStorage();
+        appState.databaseReady = false;
+        
+        // Registrar erro
+        if (databaseManager && databaseManager.logAudit) {
+            await databaseManager.logAudit('system_init_error', { error: error.message });
+        }
+    }
+    
+    // Carregar configurações na UI
+    loadData();
+    updateDashboard();
+}
+
+function loadFromLocalStorage() {
+    try {
+        const savedData = localStorage.getItem('camarim-system-data');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            
+            // Validar estrutura básica
+            if (data && typeof data === 'object') {
+                systemData = data;
+                console.log('✅ Dados carregados do localStorage (fallback)');
+            } else {
+                throw new Error('Estrutura de dados inválida');
+            }
+        } else {
+            createInitialData();
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar do localStorage:', error);
+        showAlert('Erro ao carregar dados salvos. Criando nova base de dados.', 'warning');
+        createInitialData();
+    }
+}
+
+function createInitialData() {
+    systemData = {
+        products: [],
+        sales: [],
+        settings: {
+            defaultDebitFee: 2.0,
+            defaultCreditFee: 4.5,
+            defaultTax: 6,
+            defaultMargin: 40,
+            monthlyOperationalExpenses: 4000,
+            lastProductId: 0,
+            lastSaleId: 0
+        }
+    };
+    
+    saveData();
+}
+
+// ============================================
+// 3. GERENCIAMENTO DE DADOS
+// ============================================
+
+async function saveData() {
+    try {
+        if (appState.databaseReady && databaseManager) {
+            const success = await databaseManager.saveSystemData(systemData);
+            
+            if (success) {
+                console.log('💾 Dados salvos no IndexedDB');
+            } else {
+                console.log('📝 Dados salvos no localStorage (fallback)');
+                saveToLocalStorage();
+            }
+        } else {
+            saveToLocalStorage();
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao salvar dados:', error);
+        showAlert('Erro ao salvar dados no navegador', 'error');
+        
+        // Tentar salvar no localStorage como último recurso
+        saveToLocalStorage();
+    }
+}
+
+function saveToLocalStorage() {
+    try {
+        localStorage.setItem('camarim-system-data', JSON.stringify(systemData));
+        console.log('📦 Dados salvos no localStorage');
+    } catch (error) {
+        console.error('❌ Erro ao salvar no localStorage:', error);
+        showAlert('Erro grave: não foi possível salvar os dados!', 'error');
+    }
+}
+
+function loadData() {
+    // Carregar configurações nos campos
+    document.getElementById('default-debit-fee').value = sanitizeNumber(systemData.settings.defaultDebitFee);
+    document.getElementById('default-credit-fee').value = sanitizeNumber(systemData.settings.defaultCreditFee);
+    document.getElementById('default-tax').value = sanitizeNumber(systemData.settings.defaultTax);
+    document.getElementById('default-margin').value = sanitizeNumber(systemData.settings.defaultMargin);
+    document.getElementById('monthly-expenses').value = sanitizeNumber(systemData.settings.monthlyOperationalExpenses);
+    
+    // Atualizar lista de produtos
+    updateProductsList();
+    updateSalesList();
+}
+
+async function updateProductIds() {
+    let maxId = 0;
+    
+    systemData.products.forEach(product => {
+        if (product.id && product.id.startsWith('CAM-')) {
+            const idNum = parseInt(product.id.replace('CAM-', ''));
+            if (!isNaN(idNum) && idNum > maxId) {
+                maxId = idNum;
+            }
+        }
+    });
+    
+    systemData.settings.lastProductId = maxId;
+}
+
+async function updateSaleIds() {
+    let maxId = 0;
+    
+    systemData.sales.forEach(sale => {
+        if (sale.id && sale.id.startsWith('SALE-')) {
+            const idNum = parseInt(sale.id.replace('SALE-', ''));
+            if (!isNaN(idNum) && idNum > maxId) {
+                maxId = idNum;
+            }
+        }
+    });
+    
+    systemData.settings.lastSaleId = maxId;
+}
+
+// ============================================
+// 4. NAVEGAÇÃO ENTRE VIEWS
+// ============================================
+
+function showView(viewName) {
+    viewName = DOMPurify.sanitize(viewName);
+    
+    appState.currentView = viewName;
+    window.location.hash = viewName;
+    
+    document.querySelectorAll('.view').forEach(view => {
+        view.classList.add('d-none');
+    });
+    
+    const viewElement = document.getElementById(`${viewName}-view`);
+    if (viewElement) {
+        viewElement.classList.remove('d-none');
+    } else {
+        console.error(`❌ View ${viewName} não encontrada`);
+        showView('dashboard');
+        return;
+    }
+    
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('data-view') === viewName) {
+            item.classList.add('active');
+        }
+    });
+    
+    const titles = {
+        'dashboard': 'Dashboard',
+        'products': 'Produtos',
+        'new-product': 'Cadastrar Produto',
+        'sales': 'Vendas',
+        'new-sale': 'Nova Venda',
+        'reports': 'Relatórios',
+        'settings': 'Configurações',
+        'database': 'Banco de Dados'
+    };
+    
+    document.getElementById('page-title').textContent = titles[viewName] || 'Dashboard';
+    
+    switch(viewName) {
+        case 'dashboard':
+            updateDashboard();
+            updateMonthlySalesChart();
+            break;
+        case 'products':
+            updateProductsList();
+            break;
+        case 'new-product':
+            resetProductForm();
+            break;
+        case 'sales':
+            updateSalesList();
+            break;
+        case 'new-sale':
+            setupNewSale();
+            break;
+        case 'reports':
+            updateReports();
+            updateCategoryChart();
+            break;
+        case 'database':
+            updateDatabaseInfo();
+            break;
+    }
+}
+
+// ============================================
+// 5. SETUP DE EVENT LISTENERS
+// ============================================
+
+function setupEventListeners() {
+    // Navegação do menu
+    document.querySelectorAll('.nav-item, .btn-primary, .btn-secondary, .btn[data-view]').forEach(element => {
+        element.addEventListener('click', function(e) {
+            e.preventDefault();
+            const view = this.getAttribute('data-view');
+            if (view) {
+                showView(view);
+            }
+        });
+    });
+    
+    // Botões de ação do cabeçalho
+    document.getElementById('export-btn').addEventListener('click', () => showModal('export-modal'));
+    document.getElementById('import-btn').addEventListener('click', () => showModal('import-modal'));
+    
+    // Formulário de produto
+    document.getElementById('product-form').addEventListener('submit', saveProduct);
+    
+    // Atualizar cálculos do produto em tempo real
+    const calcFields = ['purchase-cost', 'shipping-cost', 'operational-expenses', 
+                      'expected-sales', 'variable-fees', 'taxes', 'profit-margin'];
+    calcFields.forEach(fieldId => {
+        document.getElementById(fieldId).addEventListener('input', updateProductCalculations);
+    });
+    
+    // Busca de produtos
+    document.getElementById('product-search').addEventListener('input', filterProducts);
+    document.getElementById('category-filter').addEventListener('change', filterProducts);
+    
+    // Exportar produtos
+    document.getElementById('export-products').addEventListener('click', () => {
+        exportData('products');
+    });
+    
+    // Configurações
+    document.getElementById('settings-form').addEventListener('submit', saveSettings);
+    document.getElementById('export-data-btn').addEventListener('click', () => showModal('export-modal'));
+    document.getElementById('import-data-btn').addEventListener('click', () => showModal('import-modal'));
+    document.getElementById('clear-data-btn').addEventListener('click', clearAllData);
+    
+    // Modal de exportação
+    document.getElementById('confirm-export').addEventListener('click', exportData);
+    
+    // Modal de importação
+    document.getElementById('confirm-import').addEventListener('click', importData);
+    document.getElementById('import-file').addEventListener('change', function() {
+        document.getElementById('import-error').classList.add('d-none');
+    });
+    
+    // Fechar modais
+    document.querySelectorAll('.modal-close, .btn[data-modal]').forEach(button => {
+        button.addEventListener('click', function() {
+            const modalId = this.getAttribute('data-modal');
+            if (modalId) {
+                hideModal(modalId);
+            }
+        });
+    });
+    
+    // Venda
+    document.getElementById('sale-product-search').addEventListener('input', filterSaleProducts);
+    document.getElementById('payment-method').addEventListener('change', updatePaymentMethod);
+    document.getElementById('sale-discount').addEventListener('input', updateSaleSummary);
+    document.getElementById('card-fee').addEventListener('input', updateSaleSummary);
+    document.getElementById('complete-sale').addEventListener('click', processSale);
+    document.getElementById('clear-cart').addEventListener('click', clearCart);
+    
+    // Cliques fora do modal para fechar
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+    });
+    
+    // Botão de confirmação de pagamento Pix
+    document.getElementById('confirm-pix-payment').addEventListener('click', confirmPixPayment);
+    
+    // Botão de impressão de recibo
+    document.getElementById('print-receipt-btn').addEventListener('click', printReceipt);
+    
+    // Botão para gerar PDF de relatório
+    document.getElementById('generate-pdf-report').addEventListener('click', () => showModal('pdf-report-modal'));
+    document.getElementById('generate-pdf-btn').addEventListener('click', generatePDFReport);
+    
+    // Configurar seleção de período personalizado
+    document.getElementById('report-period').addEventListener('change', function() {
+        const customDateRange = document.getElementById('custom-date-range');
+        if (this.value === 'custom') {
+            customDateRange.classList.remove('d-none');
+        } else {
+            customDateRange.classList.add('d-none');
+        }
+    });
+    
+    // ============================================
+    // NOVOS EVENT LISTENERS PARA BANCO DE DADOS
+    // ============================================
+    
+    // Forçar migração para IndexedDB
+    document.getElementById('force-migration')?.addEventListener('click', async () => {
+        if (confirm('Deseja migrar todos os dados do localStorage para o IndexedDB? Esta operação pode demorar alguns segundos.')) {
+            showAlert('Migração em andamento...', 'info');
+            
+            const result = await databaseManager.migrateFromLocalStorage();
+            if (result) {
+                showAlert('Migração realizada com sucesso!', 'success');
+                updateDatabaseInfo();
+                
+                // Recarregar dados no sistema
+                systemData = await databaseManager.getSystemData();
+                loadData();
+                updateDashboard();
+            } else {
+                showAlert('Erro na migração ou nenhum dado para migrar', 'error');
+            }
+        }
+    });
+    
+    // Criar backup manual
+    document.getElementById('create-backup')?.addEventListener('click', async () => {
+        showAlert('Criando backup...', 'info');
+        
+        const timestamp = await databaseManager.createBackup('manual');
+        if (timestamp) {
+            showAlert(`Backup criado: ${new Date(timestamp).toLocaleString()}`, 'success');
+            updateDatabaseInfo();
+        } else {
+            showAlert('Erro ao criar backup', 'error');
+        }
+    });
+    
+    // Exportar dados completos
+    document.getElementById('export-db')?.addEventListener('click', async () => {
+        try {
+            showAlert('Exportando dados...', 'info');
+            
+            const exportData = await databaseManager.exportDatabase();
+            const blob = new Blob([exportData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `camarim-full-backup-${new Date().toISOString().slice(0,10)}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            
+            showAlert('Backup exportado com sucesso!', 'success');
+            
+        } catch (error) {
+            showAlert('Erro ao exportar backup: ' + error.message, 'error');
+        }
+    });
+    
+    // Importar backup
+    document.getElementById('import-backup')?.addEventListener('click', async () => {
+        const fileInput = document.getElementById('backup-file');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            showAlert('Selecione um arquivo de backup', 'error');
+            return;
+        }
+        
+        if (!confirm('ATENÇÃO: Esta ação irá substituir TODOS os dados atuais. Deseja continuar?')) {
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                showAlert('Importando backup...', 'info');
+                
+                const importData = JSON.parse(e.target.result);
+                await databaseManager.importDatabase(importData);
+                
+                // Recarregar dados no sistema
+                systemData = await databaseManager.getSystemData();
+                loadData();
+                updateDashboard();
+                updateDatabaseInfo();
+                
+                showAlert('Backup importado com sucesso!', 'success');
+                
+            } catch (error) {
+                showAlert('Erro ao importar backup: ' + error.message, 'error');
+            }
+        };
+        reader.readAsText(file);
+    });
+    
+    // Limpar localStorage
+    document.getElementById('cleanup-local')?.addEventListener('click', async () => {
+        if (confirm('Deseja limpar os dados antigos do localStorage? Isso não afetará o IndexedDB.')) {
+            localStorage.removeItem('camarim-system-data');
+            localStorage.removeItem('camarim-backup-data');
+            
+            showAlert('LocalStorage limpo com sucesso!', 'success');
+            updateDatabaseInfo();
+        }
+    });
+    
+    // Compactar banco de dados
+    document.getElementById('compact-db')?.addEventListener('click', async () => {
+        if (confirm('Compactar o banco de dados? Esta operação pode demorar alguns minutos.')) {
+            showAlert('Compactando banco de dados...', 'info');
+            
+            const success = await databaseManager.compactDatabase();
+            if (success) {
+                showAlert('Banco compactado com sucesso!', 'success');
+                updateDatabaseInfo();
+            } else {
+                showAlert('Erro ao compactar banco', 'error');
+            }
+        }
+    });
+    
+    // Reconstruir índices
+    document.getElementById('rebuild-indexes')?.addEventListener('click', async () => {
+        if (confirm('Reconstruir índices do banco? O sistema ficará indisponível por alguns segundos.')) {
+            showAlert('Reconstruindo índices...', 'info');
+            
+            const success = await databaseManager.rebuildIndexes();
+            if (success) {
+                showAlert('Índices reconstruídos com sucesso!', 'success');
+                updateDatabaseInfo();
+            } else {
+                showAlert('Erro ao reconstruir índices', 'error');
+            }
+        }
+    });
+}
+
+// ============================================
+// 6. VIEW DE GERENCIAMENTO DO BANCO DE DADOS
+// ============================================
+
+function addDatabaseManagementView() {
+    const navMenu = document.querySelector('.nav-menu');
+    
+    // Verificar se já existe o item
+    if (document.querySelector('[data-view="database"]')) {
+        return;
+    }
+    
+    // Adicionar item no menu
+    const dbMenuItem = document.createElement('a');
+    dbMenuItem.href = '#database';
+    dbMenuItem.className = 'nav-item';
+    dbMenuItem.setAttribute('data-view', 'database');
+    dbMenuItem.innerHTML = '<i class="fas fa-database"></i> Banco de Dados';
+    navMenu.appendChild(dbMenuItem);
+    
+    // Adicionar view
+    const viewContainer = document.getElementById('view-container');
+    const dbView = document.createElement('div');
+    dbView.id = 'database-view';
+    dbView.className = 'view d-none';
+    dbView.innerHTML = `
+        <div class="header">
+            <h2>Gerenciamento do Banco de Dados</h2>
+            <div class="header-actions">
+                <button class="btn btn-light" data-view="settings">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+            </div>
+        </div>
+        
+        <div class="form-container">
+            <div id="db-info-container" class="mb-20">
+                <!-- Informações serão carregadas aqui -->
+            </div>
+            
+            <div class="dashboard-cards">
+                <div class="card card-1">
+                    <div class="card-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3>Status do Banco</h3>
+                    <div class="card-value" id="db-status">Carregando...</div>
+                    <div class="card-change" id="db-type"></div>
+                </div>
+                
+                <div class="card card-2">
+                    <div class="card-icon">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <h3>Produtos</h3>
+                    <div class="card-value" id="db-products">0</div>
+                    <div class="card-change">Cadastrados</div>
+                </div>
+                
+                <div class="card card-3">
+                    <div class="card-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <h3>Vendas</h3>
+                    <div class="card-value" id="db-sales">0</div>
+                    <div class="card-change">Registradas</div>
+                </div>
+                
+                <div class="card card-4">
+                    <div class="card-icon">
+                        <i class="fas fa-hdd"></i>
+                    </div>
+                    <h3>Armazenamento</h3>
+                    <div class="card-value" id="db-storage">0 MB</div>
+                    <div class="card-change" id="db-usage"></div>
+                </div>
+            </div>
+            
+            <div class="mt-20">
+                <h3>Ações de Migração</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <button class="btn btn-info btn-block" id="force-migration">
+                            <i class="fas fa-sync"></i> Forçar Migração
+                        </button>
+                        <div class="form-text">Migrar dados do localStorage para IndexedDB</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button class="btn btn-success btn-block" id="create-backup">
+                            <i class="fas fa-save"></i> Criar Backup
+                        </button>
+                        <div class="form-text">Criar backup manual dos dados</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button class="btn btn-warning btn-block" id="export-db">
+                            <i class="fas fa-download"></i> Exportar Dados
+                        </button>
+                        <div class="form-text">Exportar todos os dados para arquivo</div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="backup-file">Importar Dados</label>
+                        <input type="file" id="backup-file" class="form-control" accept=".json">
+                        <button class="btn btn-primary btn-block mt-10" id="import-backup">
+                            <i class="fas fa-upload"></i> Importar Backup
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cleanup-local">Limpeza</label>
+                        <button class="btn btn-danger btn-block" id="cleanup-local">
+                            <i class="fas fa-trash"></i> Limpar localStorage
+                        </button>
+                        <div class="form-text">Remove dados antigos do localStorage</div>
+                    </div>
+                </div>
+                
+                <h3 class="mt-20">Otimização</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <button class="btn btn-secondary btn-block" id="compact-db">
+                            <i class="fas fa-compress"></i> Compactar Banco
+                        </button>
+                        <div class="form-text">Otimiza espaço e performance</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button class="btn btn-secondary btn-block" id="rebuild-indexes">
+                            <i class="fas fa-search"></i> Reconstruir Índices
+                        </button>
+                        <div class="form-text">Melhora velocidade das consultas</div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-success d-none" id="db-alert">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="db-alert-message"></span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    viewContainer.appendChild(dbView);
+}
+
+async function updateDatabaseInfo() {
+    try {
+        if (!databaseManager) {
+            document.getElementById('db-status').textContent = 'Não disponível';
+            return;
+        }
+        
+        const info = await databaseManager.getDatabaseInfo();
+        const storageInfo = info?.storageEstimate;
+        
+        // Atualizar cards
+        document.getElementById('db-status').textContent = 
+            appState.databaseReady ? 'IndexedDB' : 'LocalStorage';
+        
+        document.getElementById('db-type').innerHTML = appState.databaseReady ? 
+            '<span class="positive"><i class="fas fa-check"></i> Otimizado</span>' :
+            '<span class="warning"><i class="fas fa-exclamation-triangle"></i> Fallback</span>';
+        
+        document.getElementById('db-products').textContent = systemData.products.length;
+        document.getElementById('db-sales').textContent = systemData.sales.length;
+        
+        if (storageInfo) {
+            document.getElementById('db-storage').textContent = `${storageInfo.usageMB} MB`;
+            document.getElementById('db-usage').textContent = `${storageInfo.percentage}% usado`;
+        }
+        
+        // Atualizar informações detalhadas
+        const infoContainer = document.getElementById('db-info-container');
+        let infoHTML = '';
+        
+        if (info) {
+            infoHTML = `
+                <div class="alert ${appState.databaseReady ? 'alert-success' : 'alert-warning'}">
+                    <i class="fas fa-${appState.databaseReady ? 'check-circle' : 'exclamation-triangle'}"></i>
+                    <strong>Status:</strong> ${appState.databaseReady ? 
+                        'Usando IndexedDB (recomendado)' : 
+                        'Usando localStorage (modo fallback)'}
+                    ${info.lastBackup ? `<br><small>Último backup: ${new Date(info.lastBackup).toLocaleString()}</small>` : ''}
+                </div>
+                
+                <div class="calculation-box">
+                    <h4>Informações Detalhadas</h4>
+                    <div class="calculation-row">
+                        <span>Versão do Banco:</span>
+                        <span>${info.version}</span>
+                    </div>
+                    <div class="calculation-row">
+                        <span>Produtos cadastrados:</span>
+                        <span>${info.counts?.products || 0}</span>
+                    </div>
+                    <div class="calculation-row">
+                        <span>Vendas registradas:</span>
+                        <span>${info.counts?.sales || 0}</span>
+                    </div>
+                    <div class="calculation-row">
+                        <span>Backups armazenados:</span>
+                        <span>${info.counts?.backups || 0}</span>
+                    </div>
+            `;
+            
+            if (storageInfo) {
+                infoHTML += `
+                    <div class="calculation-row">
+                        <span>Armazenamento usado:</span>
+                        <span>${storageInfo.usageMB} MB</span>
+                    </div>
+                    <div class="calculation-row">
+                        <span>Limite disponível:</span>
+                        <span>${storageInfo.quotaMB} MB</span>
+                    </div>
+                    <div class="calculation-row">
+                        <span>Percentual usado:</span>
+                        <span>${storageInfo.percentage}%</span>
+                    </div>
+                `;
+            }
+            
+            infoHTML += `
+                    <div class="calculation-row">
+                        <span>Consultas realizadas:</span>
+                        <span>${info.metrics?.queries || 0}</span>
+                    </div>
+                    <div class="calculation-row">
+                        <span>Taxa de cache:</span>
+                        <span>${info.metrics?.cacheHitRate || '0%'}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            infoHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Informações do banco não disponíveis</strong>
+                </div>
+            `;
+        }
+        
+        infoContainer.innerHTML = DOMPurify.sanitize(infoHTML);
+        
+    } catch (error) {
+        console.error('❌ Erro ao atualizar informações do banco:', error);
+    }
+}
+
+function showDatabaseStatus() {
+    // Mostrar status na console
+    console.group('📊 Status do Banco de Dados');
+    console.log('Usando:', appState.databaseReady ? 'IndexedDB' : 'LocalStorage');
+    console.log('Produtos:', systemData.products.length);
+    console.log('Vendas:', systemData.sales.length);
+    console.log('Backup automático:', databaseManager?.backgroundSync ? 'Ativo' : 'Inativo');
+    console.groupEnd();
+}
+
+// ============================================
+// 7. SISTEMA DE VENDAS COM ATENDENTE
+// ============================================
+
+function updatePaymentMethod() {
+    const paymentMethod = document.getElementById('payment-method').value;
+    const cardFeeContainer = document.getElementById('card-fee-container');
+    const cardFeeInfo = document.getElementById('card-fee-info');
+    
+    if (paymentMethod === 'debit') {
+        cardFeeContainer.classList.remove('d-none');
+        cardFeeInfo.textContent = `Taxa para cartão de débito: ${sanitizeNumber(systemData.settings.defaultDebitFee)}%`;
+        document.getElementById('card-fee').value = sanitizeNumber(systemData.settings.defaultDebitFee);
+    } else if (paymentMethod === 'credit') {
+        cardFeeContainer.classList.remove('d-none');
+        cardFeeInfo.textContent = `Taxa para cartão de crédito: ${sanitizeNumber(systemData.settings.defaultCreditFee)}%`;
+        document.getElementById('card-fee').value = sanitizeNumber(systemData.settings.defaultCreditFee);
+    } else if (paymentMethod === 'cash' || paymentMethod === 'pix') {
+        cardFeeContainer.classList.add('d-none');
+    }
+    
+    updateSaleSummary();
+}
+
+async function processSale() {
+    if (appState.cart.length === 0) {
+        showAlert('Adicione produtos ao carrinho antes de finalizar a venda', 'error');
+        return;
+    }
+    
+    const attendantInput = document.getElementById('attendant');
+    const attendant = DOMPurify.sanitize(attendantInput.value.trim());
+    
+    if (!attendant) {
+        showAlert('Selecione o atendente', 'error');
+        return;
+    }
+    
+    if (attendant.length > 100) {
+        showAlert('Nome do atendente muito longo. Máximo 100 caracteres.', 'error');
+        return;
+    }
+    
+    let subtotal = 0;
+    appState.cart.forEach(item => {
+        subtotal += item.price * item.quantity;
+    });
+    
+    const discount = sanitizeNumber(parseFloat(document.getElementById('sale-discount').value) || 0);
+    const paymentMethod = document.getElementById('payment-method').value;
+    let cardFee = 0;
+    let cardType = "";
+    
+    if (paymentMethod === 'debit' || paymentMethod === 'credit') {
+        cardFee = sanitizeNumber(parseFloat(document.getElementById('card-fee').value) || 0);
+        cardType = paymentMethod;
+    }
+    
+    const fees = (paymentMethod === 'debit' || paymentMethod === 'credit') ? 
+        (subtotal - discount) * (cardFee / 100) : 0;
+    const total = subtotal - discount + fees;
+    
+    for (const item of appState.cart) {
+        const product = systemData.products.find(p => p.id === item.productId);
+        if (!product || product.stock < item.quantity) {
+            showAlert(`Estoque insuficiente para ${DOMPurify.sanitize(item.name)} (Disponível: ${product ? product.stock : 0})`, 'error');
+            return;
+        }
+    }
+    
+    systemData.settings.lastSaleId++;
+    const saleId = `SALE-${systemData.settings.lastSaleId.toString().padStart(3, '0')}`;
+    
+    const sale = {
+        id: saleId,
+        date: new Date().toISOString(),
+        items: appState.cart.map(item => ({
+            productId: item.productId,
+            name: DOMPurify.sanitize(item.name),
+            quantity: item.quantity,
+            price: item.price
+        })),
+        subtotal: subtotal,
+        discount: discount,
+        paymentMethod: paymentMethod,
+        cardType: cardType,
+        cardFee: cardFee,
+        fees: fees,
+        total: total,
+        attendant: attendant
+    };
+    
+    appState.currentSaleData = sale;
+    
+    if (paymentMethod === 'pix') {
+        showPixPayment(sale);
+    } else {
+        await confirmSale(sale);
+    }
+}
+
+async function confirmSale(sale) {
+    try {
+        // Atualizar estoque dos produtos
+        appState.cart.forEach(item => {
+            const product = systemData.products.find(p => p.id === item.productId);
+            if (product) {
+                product.stock -= item.quantity;
+            }
+        });
+        
+        // Adicionar venda ao histórico
+        systemData.sales.push(sale);
+        
+        // Salvar dados
+        await saveData();
+        
+        // Registrar no log de auditoria
+        if (databaseManager) {
+            await databaseManager.logAudit('sale_completed', {
+                saleId: sale.id,
+                total: sale.total,
+                items: sale.items.length,
+                attendant: sale.attendant
+            });
+        }
+        
+        // Limpar carrinho
+        appState.cart = [];
+        document.getElementById('attendant').value = '';
+        
+        // Mostrar recibo
+        showReceipt(sale);
+        
+        // Atualizar views
+        updateDashboard();
+        updateMonthlySalesChart();
+        updateProductsList();
+        updateSaleProductsList();
+        updateCartDisplay();
+        updateSaleSummary();
+        
+        showAlert(`Venda ${sale.id} finalizada com sucesso! Total: ${formatCurrency(sale.total)}`, 'success');
+        
+    } catch (error) {
+        console.error('❌ Erro ao confirmar venda:', error);
+        showAlert('Erro ao salvar a venda. Tente novamente.', 'error');
+    }
+}
+
+// ============================================
+// 8. SISTEMA DE RECIBOS E IMPRESSÃO
+// ============================================
+
+function showReceipt(sale) {
+    const modalContent = document.getElementById('receipt-content');
+    const saleDate = new Date(sale.date);
+    
+    const sanitizedId = DOMPurify.sanitize(sale.id);
+    const sanitizedAttendant = DOMPurify.sanitize(sale.attendant);
+    
+    let receiptHTML = `
+        <div class="receipt-header">
+            <h2 style="margin-bottom: 5px;">CAMARIM BOUTIQUE</h2>
+            <p style="margin-bottom: 5px;">Sistema de Gestão</p>
+            <p>CNPJ: 12.345.678/0001-99</p>
+            <p>${saleDate.toLocaleDateString('pt-BR')} ${saleDate.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</p>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <p><strong>Venda:</strong> ${sanitizedId}</p>
+            <p><strong>Atendente:</strong> ${sanitizedAttendant}</p>
+        </div>
+        
+        <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 10px 0; margin-bottom: 15px;">
+    `;
+    
+    sale.items.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        const sanitizedName = DOMPurify.sanitize(item.name);
+        receiptHTML += `
+            <div class="receipt-item">
+                <div style="flex: 1;">
+                    <div>${sanitizedName}</div>
+                    <div style="font-size: 0.9em;">${item.quantity} x ${formatCurrency(item.price)}</div>
+                </div>
+                <div>${formatCurrency(itemTotal)}</div>
+            </div>
+        `;
+    });
+    
+    receiptHTML += `
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <div class="receipt-item">
+                <span>Subtotal:</span>
+                <span>${formatCurrency(sale.subtotal)}</span>
+            </div>
+    `;
+    
+    if (sale.discount > 0) {
+        receiptHTML += `
+            <div class="receipt-item">
+                <span>Desconto:</span>
+                <span>- ${formatCurrency(sale.discount)}</span>
+            </div>
+        `;
+    }
+    
+    if (sale.fees > 0) {
+        const feeType = sale.cardType === 'debit' ? 'Taxa Débito' : 'Taxa Crédito';
+        receiptHTML += `
+            <div class="receipt-item">
+                <span>${feeType} (${sale.cardFee}%):</span>
+                <span>${formatCurrency(sale.fees)}</span>
+            </div>
+        `;
+    }
+    
+    let paymentMethodText = '';
+    switch(sale.paymentMethod) {
+        case 'cash':
+            paymentMethodText = 'Dinheiro';
+            break;
+        case 'pix':
+            paymentMethodText = 'Pix';
+            break;
+        case 'debit':
+            paymentMethodText = 'Cartão de Débito';
+            break;
+        case 'credit':
+            paymentMethodText = 'Cartão de Crédito';
+            break;
+        default:
+            paymentMethodText = DOMPurify.sanitize(sale.paymentMethod);
+    }
+    
+    receiptHTML += `
+            <div class="receipt-item receipt-total">
+                <span>TOTAL:</span>
+                <span>${formatCurrency(sale.total)}</span>
+            </div>
+            
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #000;">
+                <p><strong>Forma de Pagamento:</strong> ${paymentMethodText}</p>
+            </div>
+        </div>
+        
+        <div class="receipt-footer">
+            <p>**************************************</p>
+            <p>Obrigado pela preferência!</p>
+            <p>Volte sempre!</p>
+            <p>Instagram:@camarim</p>
+            <p>**************************************</p>
+        </div>
+    `;
+    
+    modalContent.innerHTML = DOMPurify.sanitize(receiptHTML);
+    showModal('receipt-modal');
+}
+
+// ============================================
+// 9. SISTEMA DE RELATÓRIOS EM PDF
+// ============================================
+
+function generatePDFReport() {
+    const reportType = document.getElementById('report-type').value;
+    const reportPeriod = document.getElementById('report-period').value;
+    const reportTitle = DOMPurify.sanitize(document.getElementById('report-title').value) || `Relatório ${getReportTypeName(reportType)}`;
+    const includeCharts = document.getElementById('include-charts').value === 'yes';
+    const includeTables = document.getElementById('include-tables').value === 'yes';
+    const reportFormat = document.getElementById('report-format').value;
+    const reportOrientation = document.getElementById('report-orientation').value;
+    
+    let startDate, endDate;
+    const today = new Date();
+    
+    switch(reportPeriod) {
+        case 'today':
+            startDate = new Date(today);
+            endDate = new Date(today);
+            break;
+        case 'yesterday':
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 1);
+            endDate = new Date(startDate);
+            break;
+        case 'last7':
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 7);
+            endDate = new Date(today);
+            break;
+        case 'last30':
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 30);
+            endDate = new Date(today);
+            break;
+        case 'thisMonth':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            break;
+        case 'lastMonth':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+            break;
+        case 'thisYear':
+            startDate = new Date(today.getFullYear(), 0, 1);
+            endDate = new Date(today.getFullYear(), 11, 31);
+            break;
+        case 'custom':
+            const startDateInput = document.getElementById('start-date').value;
+            const endDateInput = document.getElementById('end-date').value;
+            
+            if (!startDateInput || !endDateInput) {
+                showAlert('Selecione datas de início e fim para o período personalizado', 'error');
+                return;
+            }
+            
+            startDate = new Date(startDateInput);
+            endDate = new Date(endDateInput);
+            
+            if (isNaN(startDate) || isNaN(endDate)) {
+                showAlert('Selecione datas válidas para o período personalizado', 'error');
+                return;
+            }
+            
+            if (startDate > endDate) {
+                showAlert('A data de início deve ser anterior à data de fim', 'error');
+                return;
+            }
+            break;
+        default:
+            showAlert('Período de relatório inválido', 'error');
+            return;
+    }
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: reportOrientation,
+        unit: 'mm',
+        format: reportFormat
+    });
+    
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 15;
+    let yPosition = margin;
+    
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text(reportTitle, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 10;
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Período: ${startDate.toLocaleDateString('pt-BR')} à ${endDate.toLocaleDateString('pt-BR')}`, margin, yPosition);
+    yPosition += 7;
+    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, margin, yPosition);
+    yPosition += 15;
+    
+    switch(reportType) {
+        case 'sales':
+            generateSalesReportPDF(doc, startDate, endDate, pageWidth, margin, yPosition, includeTables);
+            break;
+        case 'products':
+            generateProductsReportPDF(doc, pageWidth, margin, yPosition, includeTables);
+            break;
+        case 'financial':
+            generateFinancialReportPDF(doc, startDate, endDate, pageWidth, margin, yPosition, includeCharts);
+            break;
+        case 'inventory':
+            generateInventoryReportPDF(doc, pageWidth, margin, yPosition, includeTables);
+            break;
+    }
+    
+    const fileName = `relatorio_${reportType}_${new Date().toISOString().slice(0,10)}.pdf`;
+    doc.save(fileName);
+    
+    document.getElementById('pdf-report-message').textContent = DOMPurify.sanitize(`Relatório "${fileName}" gerado com sucesso!`);
+    document.getElementById('pdf-report-alert').classList.remove('d-none');
+    
+    setTimeout(() => {
+        hideModal('pdf-report-modal');
+        document.getElementById('pdf-report-alert').classList.add('d-none');
+    }, 2000);
+}
+
+// ============================================
+// 10. FUNÇÕES DE APOIO PARA VENDAS
+// ============================================
+
+function setupNewSale() {
+    updateSaleProductsList();
+    updateCartDisplay();
+    updateSaleSummary();
+    updatePaymentMethod();
+}
+
+function updateSaleProductsList() {
+    const container = document.getElementById('sale-products-list');
+    container.innerHTML = '';
+    
+    systemData.products.forEach(product => {
+        if (product.stock > 0) {
+            const sanitizedName = DOMPurify.sanitize(product.name);
+            const productElement = document.createElement('div');
+            productElement.className = 'cart-item';
+            productElement.innerHTML = `
+                <div class="cart-item-info">
+                    <h4>${sanitizedName}</h4>
+                    <div class="code">${product.id} | Estoque: ${product.stock}</div>
+                    <div class="currency" style="font-weight: 600; margin-top: 5px;">${formatCurrency(product.sellingPrice)}</div>
+                </div>
+                <div class="cart-item-quantity">
+                    <button class="quantity-btn minus" data-id="${DOMPurify.sanitize(product.id)}">-</button>
+                    <span id="cart-qty-${DOMPurify.sanitize(product.id)}">0</span>
+                    <button class="quantity-btn plus" data-id="${DOMPurify.sanitize(product.id)}">+</button>
+                    <button class="btn btn-small btn-success add-to-cart" data-id="${DOMPurify.sanitize(product.id)}" style="margin-left: 10px;">
+                        <i class="fas fa-cart-plus"></i> Adicionar
+                    </button>
+                </div>
+            `;
+            container.appendChild(productElement);
+        }
+    });
+    
+    document.querySelectorAll('.plus').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = DOMPurify.sanitize(this.getAttribute('data-id'));
+            const cartItem = appState.cart.find(item => item.productId === productId);
+            const qtySpan = document.getElementById(`cart-qty-${productId}`);
+            let currentQty = cartItem ? cartItem.quantity : 0;
+            
+            const product = systemData.products.find(p => p.id === productId);
+            if (product && currentQty < product.stock) {
+                currentQty++;
+                qtySpan.textContent = currentQty;
+            }
+        });
+    });
+    
+    document.querySelectorAll('.minus').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = DOMPurify.sanitize(this.getAttribute('data-id'));
+            const qtySpan = document.getElementById(`cart-qty-${productId}`);
+            let currentQty = parseInt(qtySpan.textContent) || 0;
+            
+            if (currentQty > 0) {
+                currentQty--;
+                qtySpan.textContent = currentQty;
+            }
+        });
+    });
+    
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = DOMPurify.sanitize(this.getAttribute('data-id'));
+            const qtySpan = document.getElementById(`cart-qty-${productId}`);
+            const quantity = parseInt(qtySpan.textContent) || 0;
+            
+            if (quantity > 0) {
+                addToCart(productId, quantity);
+                qtySpan.textContent = '0';
+            }
+        });
+    });
+}
+
+function filterSaleProducts() {
+    const searchTerm = DOMPurify.sanitize(document.getElementById('sale-product-search').value.toLowerCase());
+    const products = document.querySelectorAll('#sale-products-list .cart-item');
+    
+    products.forEach(product => {
+        const productName = product.querySelector('.cart-item-info h4').textContent.toLowerCase();
+        const productCode = product.querySelector('.code').textContent.toLowerCase();
+        
+        const isVisible = productName.includes(searchTerm) || productCode.includes(searchTerm);
+        product.style.display = isVisible ? '' : 'none';
+    });
+}
+
+function addToCart(productId, quantity) {
+    const product = systemData.products.find(p => p.id === productId);
+    if (!product) return;
+    
+    if (quantity > product.stock) {
+        showAlert(`Estoque insuficiente! Disponível: ${product.stock}`, 'error');
+        return;
+    }
+    
+    const existingItem = appState.cart.find(item => item.productId === productId);
+    
+    if (existingItem) {
+        const newQty = existingItem.quantity + quantity;
+        if (newQty > product.stock) {
+            showAlert(`Estoque insuficiente! Disponível: ${product.stock}`, 'error');
+            return;
+        }
+        existingItem.quantity = newQty;
+    } else {
+        appState.cart.push({
+            productId: productId,
+            name: DOMPurify.sanitize(product.name),
+            price: product.sellingPrice,
+            quantity: quantity
+        });
+    }
+    
+    updateCartDisplay();
+    updateSaleSummary();
+    showAlert(`${quantity}x ${DOMPurify.sanitize(product.name)} adicionado(s) ao carrinho`, 'success');
+}
+
+function updateCartDisplay() {
+    const cartContainer = document.getElementById('sale-cart');
+    const emptyMessage = document.getElementById('empty-cart-message');
+    
+    if (appState.cart.length === 0) {
+        cartContainer.innerHTML = '';
+        emptyMessage.classList.remove('d-none');
+        return;
+    }
+    
+    emptyMessage.classList.add('d-none');
+    
+    let cartHTML = '<h4 style="margin-bottom: 15px;">Carrinho de Venda</h4>';
+    
+    appState.cart.forEach((item, index) => {
+        const product = systemData.products.find(p => p.id === item.productId);
+        const subtotal = item.price * item.quantity;
+        
+        cartHTML += `
+            <div class="cart-item">
+                <div class="cart-item-info">
+                    <h4>${DOMPurify.sanitize(item.name)}</h4>
+                    <div class="code">${item.productId}</div>
+                    <div class="currency">${formatCurrency(item.price)} cada</div>
+                </div>
+                <div class="cart-item-quantity">
+                    <button class="quantity-btn minus-cart" data-index="${index}">-</button>
+                    <span>${item.quantity}</span>
+                    <button class="quantity-btn plus-cart" data-index="${index}">+</button>
+                    <button class="btn btn-small btn-danger remove-from-cart" data-index="${index}" style="margin-left: 10px;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="text-right" style="min-width: 100px;">
+                    <strong class="currency">${formatCurrency(subtotal)}</strong>
+                </div>
+            </div>
+        `;
+    });
+    
+    cartContainer.innerHTML = DOMPurify.sanitize(cartHTML);
+    
+    document.querySelectorAll('.plus-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const index = sanitizeNumber(parseInt(this.getAttribute('data-index')));
+            updateCartItemQuantity(index, 1);
+        });
+    });
+    
+    document.querySelectorAll('.minus-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const index = sanitizeNumber(parseInt(this.getAttribute('data-index')));
+            updateCartItemQuantity(index, -1);
+        });
+    });
+    
+    document.querySelectorAll('.remove-from-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const index = sanitizeNumber(parseInt(this.getAttribute('data-index')));
+            removeFromCart(index);
+        });
+    });
+}
+
+function updateCartItemQuantity(index, change) {
+    const item = appState.cart[index];
+    if (!item) return;
+    
+    const product = systemData.products.find(p => p.id === item.productId);
+    if (!product) return;
+    
+    const newQuantity = item.quantity + change;
+    
+    if (newQuantity < 1) {
+        removeFromCart(index);
+        return;
+    }
+    
+    if (newQuantity > product.stock) {
+        showAlert(`Estoque insuficiente! Disponível: ${product.stock}`, 'error');
+        return;
+    }
+    
+    item.quantity = newQuantity;
+    updateCartDisplay();
+    updateSaleSummary();
+}
+
+function removeFromCart(index) {
+    if (index >= 0 && index < appState.cart.length) {
+        appState.cart.splice(index, 1);
+        updateCartDisplay();
+        updateSaleSummary();
+    }
+}
+
+function clearCart() {
+    appState.cart = [];
+    updateCartDisplay();
+    updateSaleSummary();
+    showAlert('Carrinho limpo', 'info');
+}
+
+function updateSaleSummary() {
+    let subtotal = 0;
+    appState.cart.forEach(item => {
+        subtotal += item.price * item.quantity;
+    });
+    
+    const discount = sanitizeNumber(parseFloat(document.getElementById('sale-discount').value) || 0);
+    const paymentMethod = document.getElementById('payment-method').value;
+    const cardFeeContainer = document.getElementById('card-fee-container');
+    const cartFeesRow = document.getElementById('cart-fees-row');
+    
+    let fees = 0;
+    
+    if (paymentMethod === 'debit' || paymentMethod === 'credit') {
+        cardFeeContainer.classList.remove('d-none');
+        cartFeesRow.classList.remove('d-none');
+        
+        const cardFee = sanitizeNumber(parseFloat(document.getElementById('card-fee').value) || 0);
+        fees = (subtotal - discount) * (cardFee / 100);
+        document.getElementById('cart-fees').textContent = formatCurrency(fees);
+    } else {
+        cardFeeContainer.classList.add('d-none');
+        cartFeesRow.classList.add('d-none');
+    }
+    
+    const total = subtotal - discount + fees;
+    
+    document.getElementById('cart-subtotal').textContent = formatCurrency(subtotal);
+    document.getElementById('cart-discount').textContent = formatCurrency(discount);
+    document.getElementById('cart-total').textContent = formatCurrency(total);
+}
+
+// ============================================
+// 11. GERENCIAMENTO DE PRODUTOS
+// ============================================
+
+function updateProductCalculations() {
+    const purchaseCost = sanitizeNumber(parseFloat(document.getElementById('purchase-cost').value) || 0);
+    const shippingCost = sanitizeNumber(parseFloat(document.getElementById('shipping-cost').value) || 0);
+    const operationalExpenses = sanitizeNumber(parseFloat(document.getElementById('operational-expenses').value) || 0);
+    const expectedSales = sanitizeNumber(parseFloat(document.getElementById('expected-sales').value) || 1);
+    const variableFees = sanitizeNumber(parseFloat(document.getElementById('variable-fees').value) || 0);
+    const taxes = sanitizeNumber(parseFloat(document.getElementById('taxes').value) || 0);
+    const profitMargin = sanitizeNumber(parseFloat(document.getElementById('profit-margin').value) || 0);
+    
+    if (purchaseCost < 0 || shippingCost < 0 || operationalExpenses < 0 || expectedSales <= 0) {
+        showAlert('Valores não podem ser negativos e vendas esperadas devem ser maiores que zero', 'error');
+        return;
+    }
+    
+    const totalPurchaseCost = purchaseCost + shippingCost;
+    const proportionalOperationalCost = operationalExpenses / expectedSales;
+    const cmv = totalPurchaseCost + proportionalOperationalCost;
+    
+    const variableCosts = (variableFees + taxes + profitMargin) / 100;
+    if (variableCosts >= 1) {
+        showAlert('A soma das taxas variáveis não pode ser 100% ou mais', 'error');
+        return;
+    }
+    const markup = 1 / (1 - variableCosts);
+    
+    const suggestedPrice = cmv * markup;
+    
+    document.getElementById('calc-purchase-cost').textContent = formatCurrency(purchaseCost);
+    document.getElementById('calc-shipping-cost').textContent = formatCurrency(shippingCost);
+    document.getElementById('calc-operational-cost').textContent = formatCurrency(proportionalOperationalCost);
+    document.getElementById('calc-cmv').textContent = formatCurrency(cmv);
+    document.getElementById('calc-variable-fees').textContent = variableFees.toFixed(2);
+    document.getElementById('calc-taxes').textContent = taxes.toFixed(2);
+    document.getElementById('calc-profit-margin').textContent = profitMargin.toFixed(2);
+    document.getElementById('calc-markup').textContent = markup.toFixed(2);
+    document.getElementById('calc-suggested-price').textContent = formatCurrency(suggestedPrice);
+    
+    const isEdit = document.getElementById('is-edit').value === 'true';
+    const sellingPriceField = document.getElementById('selling-price');
+    
+    if (!isEdit || !sellingPriceField.value || sellingPriceField.value == 0) {
+        sellingPriceField.value = suggestedPrice.toFixed(2);
+    }
+}
+
+function generateProductId() {
+    systemData.settings.lastProductId++;
+    const idNumber = systemData.settings.lastProductId.toString().padStart(5, '0');
+    return `CAM-${idNumber}`;
+}
+
+async function saveProduct(e) {
+    e.preventDefault();
+    
+    const name = DOMPurify.sanitize(document.getElementById('product-name').value.trim());
+    const category = DOMPurify.sanitize(document.getElementById('product-category').value);
+    const purchaseCost = sanitizeNumber(parseFloat(document.getElementById('purchase-cost').value));
+    const shippingCost = sanitizeNumber(parseFloat(document.getElementById('shipping-cost').value));
+    const sellingPrice = sanitizeNumber(parseFloat(document.getElementById('selling-price').value));
+    const stock = sanitizeNumber(parseInt(document.getElementById('initial-stock').value));
+    
+    if (!name || name.length > 200) {
+        showAlert('Nome do produto é obrigatório e deve ter no máximo 200 caracteres', 'error');
+        return;
+    }
+    
+    if (!category) {
+        showAlert('Categoria do produto é obrigatória', 'error');
+        return;
+    }
+    
+    if (isNaN(purchaseCost) || purchaseCost < 0) {
+        showAlert('Custo de compra deve ser um número positivo', 'error');
+        return;
+    }
+    
+    if (isNaN(shippingCost) || shippingCost < 0) {
+        showAlert('Custo de frete deve ser um número positivo', 'error');
+        return;
+    }
+    
+    if (isNaN(sellingPrice) || sellingPrice <= 0) {
+        showAlert('Preço de venda deve ser um número positivo maior que zero', 'error');
+        return;
+    }
+    
+    if (isNaN(stock) || stock < 0) {
+        showAlert('Estoque inicial deve ser um número inteiro positivo', 'error');
+        return;
+    }
+    
+    const operationalExpenses = sanitizeNumber(parseFloat(document.getElementById('operational-expenses').value) || 4000);
+    const expectedSales = sanitizeNumber(parseInt(document.getElementById('expected-sales').value) || 100);
+    const variableFees = sanitizeNumber(parseFloat(document.getElementById('variable-fees').value) || 9.5);
+    const taxes = sanitizeNumber(parseFloat(document.getElementById('taxes').value) || 6);
+    const profitMargin = sanitizeNumber(parseFloat(document.getElementById('profit-margin').value) || 40);
+    
+    if (expectedSales <= 0) {
+        showAlert('Vendas esperadas devem ser maiores que zero', 'error');
+        return;
+    }
+    
+    const totalPurchaseCost = purchaseCost + shippingCost;
+    const proportionalOperationalCost = operationalExpenses / expectedSales;
+    const cmv = totalPurchaseCost + proportionalOperationalCost;
+    const variableCosts = (variableFees + taxes + profitMargin) / 100;
+    
+    if (variableCosts >= 1) {
+        showAlert('A soma das taxas variáveis não pode ser 100% ou mais', 'error');
+        return;
+    }
+    
+    const markup = 1 / (1 - variableCosts);
+    const suggestedPrice = cmv * markup;
+    
+    const isEdit = document.getElementById('is-edit').value === 'true';
+    const productId = DOMPurify.sanitize(document.getElementById('product-id').value);
+    
+    let product;
+    
+    if (isEdit && productId) {
+        product = systemData.products.find(p => p.id === productId);
+        if (product) {
+            product.name = name;
+            product.category = category;
+            product.purchaseCost = purchaseCost;
+            product.shippingCost = shippingCost;
+            product.operationalCost = proportionalOperationalCost;
+            product.expectedSales = expectedSales;
+            product.variableFees = variableFees;
+            product.taxes = taxes;
+            product.profitMargin = profitMargin;
+            product.cmv = parseFloat(cmv.toFixed(2));
+            product.markup = parseFloat(markup.toFixed(2));
+            product.suggestedPrice = parseFloat(suggestedPrice.toFixed(2));
+            product.sellingPrice = sellingPrice;
+            product.stock = stock;
+            
+            showAlert(`Produto "${name}" atualizado com sucesso!`, 'success');
+        }
+    } else {
+        product = {
+            id: generateProductId(),
+            name: name,
+            category: category,
+            purchaseCost: purchaseCost,
+            shippingCost: shippingCost,
+            operationalCost: proportionalOperationalCost,
+            expectedSales: expectedSales,
+            variableFees: variableFees,
+            taxes: taxes,
+            profitMargin: profitMargin,
+            cmv: parseFloat(cmv.toFixed(2)),
+            markup: parseFloat(markup.toFixed(2)),
+            suggestedPrice: parseFloat(suggestedPrice.toFixed(2)),
+            sellingPrice: sellingPrice,
+            stock: stock,
+            createdAt: new Date().toISOString().split('T')[0]
+        };
+        
+        systemData.products.push(product);
+        
+        showAlert(`Produto "${name}" cadastrado com sucesso! Código: ${product.id}`, 'success');
+    }
+    
+    await saveData();
+    
+    // Registrar no log de auditoria
+    if (databaseManager) {
+        await databaseManager.logAudit(isEdit ? 'product_updated' : 'product_created', {
+            productId: product.id,
+            name: product.name,
+            category: product.category,
+            price: product.sellingPrice,
+            stock: product.stock
+        });
+    }
+    
+    resetProductForm();
+    updateProductsList();
+    
+    setTimeout(() => {
+        showView('products');
+    }, 2000);
+}
+
+function resetProductForm() {
+    document.getElementById('product-form').reset();
+    document.getElementById('product-id').value = '';
+    document.getElementById('is-edit').value = 'false';
+    document.getElementById('product-form-submit').textContent = 'Salvar Produto';
+    
+    document.getElementById('operational-expenses').value = systemData.settings.monthlyOperationalExpenses;
+    document.getElementById('variable-fees').value = 9.5;
+    document.getElementById('taxes').value = systemData.settings.defaultTax;
+    document.getElementById('profit-margin').value = systemData.settings.defaultMargin;
+    document.getElementById('expected-sales').value = 100;
+    document.getElementById('initial-stock').value = 10;
+    
+    updateProductCalculations();
+}
+
+function loadProductForEdit(productId) {
+    const sanitizedId = DOMPurify.sanitize(productId);
+    const product = systemData.products.find(p => p.id === sanitizedId);
+    if (!product) return;
+    
+    document.getElementById('product-id').value = product.id;
+    document.getElementById('is-edit').value = 'true';
+    document.getElementById('product-form-submit').textContent = 'Atualizar Produto';
+    
+    document.getElementById('product-name').value = DOMPurify.sanitize(product.name);
+    document.getElementById('product-category').value = DOMPurify.sanitize(product.category);
+    document.getElementById('purchase-cost').value = product.purchaseCost;
+    document.getElementById('shipping-cost').value = product.shippingCost;
+    document.getElementById('operational-expenses').value = systemData.settings.monthlyOperationalExpenses;
+    document.getElementById('expected-sales').value = product.expectedSales;
+    document.getElementById('variable-fees').value = product.variableFees;
+    document.getElementById('taxes').value = product.taxes;
+    document.getElementById('profit-margin').value = product.profitMargin;
+    document.getElementById('selling-price').value = product.sellingPrice;
+    document.getElementById('initial-stock').value = product.stock;
+    
+    updateProductCalculations();
+    showView('new-product');
+}
+
+function updateProductsList() {
+    const productsBody = document.getElementById('products-body');
+    productsBody.innerHTML = '';
+    
+    systemData.products.forEach(product => {
+        const sanitizedName = DOMPurify.sanitize(product.name);
+        const sanitizedCategory = DOMPurify.sanitize(product.category);
+        
+        const row = document.createElement('tr');
+        
+        // Célula ID
+        const idCell = document.createElement('td');
+        idCell.textContent = product.id;
+        row.appendChild(idCell);
+        
+        // Célula Nome
+        const nameCell = document.createElement('td');
+        nameCell.textContent = sanitizedName;
+        row.appendChild(nameCell);
+        
+        // Célula Categoria
+        const categoryCell = document.createElement('td');
+        categoryCell.textContent = getCategoryName(sanitizedCategory);
+        row.appendChild(categoryCell);
+        
+        // Célula Custo de Compra
+        const purchaseCostCell = document.createElement('td');
+        purchaseCostCell.className = 'currency';
+        purchaseCostCell.textContent = formatCurrency(product.purchaseCost);
+        row.appendChild(purchaseCostCell);
+        
+        // Célula CMV
+        const cmvCell = document.createElement('td');
+        cmvCell.className = 'currency';
+        cmvCell.textContent = formatCurrency(product.cmv);
+        row.appendChild(cmvCell);
+        
+        // Célula Markup
+        const markupCell = document.createElement('td');
+        markupCell.textContent = product.markup.toFixed(2);
+        row.appendChild(markupCell);
+        
+        // Célula Preço Sugerido
+        const suggestedPriceCell = document.createElement('td');
+        suggestedPriceCell.className = 'currency';
+        suggestedPriceCell.textContent = formatCurrency(product.suggestedPrice);
+        row.appendChild(suggestedPriceCell);
+        
+        // Célula Preço de Venda (com input)
+        const sellingPriceCell = document.createElement('td');
+        const priceInput = document.createElement('input');
+        priceInput.type = 'number';
+        priceInput.className = 'form-control selling-price-input';
+        priceInput.setAttribute('data-id', product.id);
+        priceInput.value = product.sellingPrice.toFixed(2);
+        priceInput.step = '0.01';
+        priceInput.min = '0.01';
+        priceInput.style.width = '120px';
+        sellingPriceCell.appendChild(priceInput);
+        row.appendChild(sellingPriceCell);
+        
+        // Célula Estoque
+        const stockCell = document.createElement('td');
+        const stockBadge = document.createElement('span');
+        if (product.stock < 10) {
+            stockBadge.className = 'badge badge-danger';
+        } else if (product.stock < 20) {
+            stockBadge.className = 'badge badge-warning';
+        } else {
+            stockBadge.className = 'badge badge-success';
+        }
+        stockBadge.textContent = `${product.stock} und.`;
+        stockCell.appendChild(stockBadge);
+        row.appendChild(stockCell);
+        
+        // Célula Ações
+        const actionsCell = document.createElement('td');
+        actionsCell.className = 'actions-cell';
+        
+        // Botão Editar Produto
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-small btn-warning edit-product';
+        editBtn.setAttribute('data-id', product.id);
+        editBtn.setAttribute('title', 'Editar Produto');
+        const editIcon = document.createElement('i');
+        editIcon.className = 'fas fa-edit';
+        editBtn.appendChild(editIcon);
+        actionsCell.appendChild(editBtn);
+        
+        // Botão Editar Preço
+        const editPriceBtn = document.createElement('button');
+        editPriceBtn.className = 'btn btn-small btn-info edit-price';
+        editPriceBtn.setAttribute('data-id', product.id);
+        editPriceBtn.setAttribute('title', 'Editar Apenas Preço');
+        const editPriceIcon = document.createElement('i');
+        editPriceIcon.className = 'fas fa-tag';
+        editPriceBtn.appendChild(editPriceIcon);
+        actionsCell.appendChild(editPriceBtn);
+        
+        // Botão Excluir
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-small btn-danger delete-product';
+        deleteBtn.setAttribute('data-id', product.id);
+        deleteBtn.setAttribute('title', 'Excluir Produto');
+        const deleteIcon = document.createElement('i');
+        deleteIcon.className = 'fas fa-trash';
+        deleteBtn.appendChild(deleteIcon);
+        actionsCell.appendChild(deleteBtn);
+        
+        row.appendChild(actionsCell);
+        
+        productsBody.appendChild(row);
+    });
+    
+    document.querySelectorAll('.selling-price-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const productId = DOMPurify.sanitize(this.getAttribute('data-id'));
+            const newPrice = sanitizeNumber(parseFloat(this.value));
+            updateProductPrice(productId, newPrice);
+        });
+    });
+    
+    document.querySelectorAll('.edit-product').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = DOMPurify.sanitize(this.getAttribute('data-id'));
+            loadProductForEdit(productId);
+        });
+    });
+    
+    document.querySelectorAll('.edit-price').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = DOMPurify.sanitize(this.getAttribute('data-id'));
+            const product = systemData.products.find(p => p.id === productId);
+            if (product) {
+                const sanitizedName = DOMPurify.sanitize(product.name);
+                const newPrice = prompt(`Digite o novo preço para ${sanitizedName}:`, product.sellingPrice);
+                if (newPrice !== null && !isNaN(parseFloat(newPrice))) {
+                    updateProductPrice(productId, sanitizeNumber(parseFloat(newPrice)));
+                }
+            }
+        });
+    });
+    
+    document.querySelectorAll('.delete-product').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = DOMPurify.sanitize(this.getAttribute('data-id'));
+            confirmDeleteProduct(productId);
+        });
+    });
+    
+    document.getElementById('total-products').textContent = systemData.products.length;
+}
+
+function filterProducts() {
+    const searchTerm = DOMPurify.sanitize(document.getElementById('product-search').value.toLowerCase());
+    const categoryFilter = document.getElementById('category-filter').value;
+    
+    const rows = document.querySelectorAll('#products-body tr');
+    
+    rows.forEach(row => {
+        const productName = row.cells[1].textContent.toLowerCase();
+        const productCode = row.cells[0].textContent.toLowerCase();
+        const productCategory = row.cells[2].textContent;
+        
+        const matchesSearch = productName.includes(searchTerm) || productCode.includes(searchTerm);
+        const matchesCategory = !categoryFilter || productCategory === getCategoryName(categoryFilter);
+        
+        row.style.display = (matchesSearch && matchesCategory) ? '' : 'none';
+    });
+}
+
+async function updateProductPrice(productId, newPrice) {
+    const sanitizedId = DOMPurify.sanitize(productId);
+    const product = systemData.products.find(p => p.id === sanitizedId);
+    if (product && !isNaN(newPrice) && newPrice > 0) {
+        product.sellingPrice = newPrice;
+        await saveData();
+        
+        // Registrar no log de auditoria
+        if (databaseManager) {
+            await databaseManager.logAudit('product_price_updated', {
+                productId: product.id,
+                oldPrice: product.sellingPrice,
+                newPrice: newPrice
+            });
+        }
+        
+        showAlert(`Preço do produto atualizado para ${formatCurrency(newPrice)}`, 'success');
+        updateProductsList();
+    } else {
+        showAlert('Preço inválido. Deve ser um número positivo maior que zero.', 'error');
+    }
+}
+
+function confirmDeleteProduct(productId) {
+    const sanitizedId = DOMPurify.sanitize(productId);
+    const product = systemData.products.find(p => p.id === sanitizedId);
+    if (product) {
+        appState.currentProductId = sanitizedId;
+        document.getElementById('delete-message').textContent = 
+            DOMPurify.sanitize(`Tem certeza que deseja excluir o produto "${product.name}" (${product.id})? Esta ação não pode ser desfeita.`);
+        showModal('delete-modal');
+        
+        document.getElementById('confirm-delete').onclick = async function() {
+            await deleteProduct(sanitizedId);
+            hideModal('delete-modal');
+        };
+    }
+}
+
+async function deleteProduct(productId) {
+    const sanitizedId = DOMPurify.sanitize(productId);
+    const productIndex = systemData.products.findIndex(p => p.id === sanitizedId);
+    
+    if (productIndex !== -1) {
+        const product = systemData.products[productIndex];
+        
+        // Registrar no log de auditoria antes de excluir
+        if (databaseManager) {
+            await databaseManager.logAudit('product_deleted', {
+                productId: product.id,
+                name: product.name,
+                category: product.category,
+                price: product.sellingPrice,
+                stock: product.stock
+            });
+        }
+        
+        systemData.products.splice(productIndex, 1);
+        await saveData();
+        updateProductsList();
+        updateDashboard();
+        showAlert('Produto excluído com sucesso', 'success');
+    }
+}
+
+// ============================================
+// 12. LISTA DE VENDAS
+// ============================================
+
+function updateSalesList() {
+    const salesBody = document.getElementById('sales-body');
+    salesBody.innerHTML = '';
+    
+    const sortedSales = [...systemData.sales].sort((a, b) => 
+        new Date(b.date) - new Date(a.date)
+    );
+    
+    sortedSales.forEach(sale => {
+        const saleDate = new Date(sale.date);
+        const itemsText = sale.items.map(item => 
+            `${item.quantity}x ${DOMPurify.sanitize(item.name)}`
+        ).join(', ');
+        
+        const totalItems = sale.items.reduce((sum, item) => sum + item.quantity, 0);
+        
+        let paymentText = '';
+        switch(sale.paymentMethod) {
+            case 'cash':
+                paymentText = 'Dinheiro';
+                break;
+            case 'pix':
+                paymentText = 'Pix';
+                break;
+            case 'debit':
+                paymentText = 'Cartão Débito';
+                break;
+            case 'credit':
+                paymentText = 'Cartão Crédito';
+                break;
+            default:
+                paymentText = DOMPurify.sanitize(sale.paymentMethod);
+        }
+        
+        const sanitizedAttendant = DOMPurify.sanitize(sale.attendant || 'Não informado');
+        
+        const row = document.createElement('tr');
+        
+        // Célula ID
+        const idCell = document.createElement('td');
+        idCell.textContent = sale.id;
+        row.appendChild(idCell);
+        
+        // Célula Data
+        const dateCell = document.createElement('td');
+        const dateText = document.createTextNode(saleDate.toLocaleDateString('pt-BR'));
+        const brElement = document.createElement('br');
+        const timeText = document.createTextNode(saleDate.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}));
+        dateCell.appendChild(dateText);
+        dateCell.appendChild(brElement);
+        dateCell.appendChild(timeText);
+        row.appendChild(dateCell);
+        
+        // Célula Itens
+        const itemsCell = document.createElement('td');
+        itemsCell.textContent = itemsText;
+        row.appendChild(itemsCell);
+        
+        // Célula Quantidade Total
+        const qtyCell = document.createElement('td');
+        qtyCell.textContent = totalItems;
+        row.appendChild(qtyCell);
+        
+        // Célula Total
+        const totalCell = document.createElement('td');
+        totalCell.className = 'currency';
+        totalCell.textContent = formatCurrency(sale.total);
+        row.appendChild(totalCell);
+        
+        // Célula Atendente
+        const attendantCell = document.createElement('td');
+        attendantCell.textContent = sanitizedAttendant;
+        row.appendChild(attendantCell);
+        
+        // Célula Pagamento
+        const paymentCell = document.createElement('td');
+        paymentCell.textContent = paymentText;
+        row.appendChild(paymentCell);
+        
+        // Célula Ações
+        const actionsCell = document.createElement('td');
+        actionsCell.className = 'actions-cell';
+        
+        // Botão Visualizar
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'btn btn-small btn-info view-sale';
+        viewBtn.setAttribute('data-id', sale.id);
+        const viewIcon = document.createElement('i');
+        viewIcon.className = 'fas fa-eye';
+        viewBtn.appendChild(viewIcon);
+        actionsCell.appendChild(viewBtn);
+        
+        row.appendChild(actionsCell);
+        
+        salesBody.appendChild(row);
+    });
+    
+    document.querySelectorAll('.view-sale').forEach(button => {
+        button.addEventListener('click', function() {
+            const saleId = DOMPurify.sanitize(this.getAttribute('data-id'));
+            viewSaleDetails(saleId);
+        });
+    });
+}
+
+function viewSaleDetails(saleId) {
+    const sanitizedId = DOMPurify.sanitize(saleId);
+    const sale = systemData.sales.find(s => s.id === sanitizedId);
+    if (sale) {
+        const modalContent = document.getElementById('sale-details-content');
+        const saleDate = new Date(sale.date);
+        
+        let detailsHTML = `
+            <div style="margin-bottom: 20px;">
+                <p><strong>ID da Venda:</strong> ${DOMPurify.sanitize(sale.id)}</p>
+                <p><strong>Data/Hora:</strong> ${saleDate.toLocaleDateString('pt-BR')} ${saleDate.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</p>
+                <p><strong>Atendente:</strong> ${DOMPurify.sanitize(sale.attendant || 'Não informado')}</p>
+            </div>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #ddd;">
+                        <th style="padding: 10px; text-align: left;">Produto</th>
+                        <th style="padding: 10px; text-align: center;">Qtd</th>
+                        <th style="padding: 10px; text-align: right;">Preço Unit.</th>
+                        <th style="padding: 10px; text-align: right;">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        sale.items.forEach(item => {
+            const sanitizedName = DOMPurify.sanitize(item.name);
+            detailsHTML += `
+                <tr>
+                    <td style="padding: 10px;">${sanitizedName}</td>
+                    <td style="padding: 10px; text-align: center;">${item.quantity}</td>
+                    <td style="padding: 10px; text-align: right;">${formatCurrency(item.price)}</td>
+                    <td style="padding: 10px; text-align: right;">${formatCurrency(item.price * item.quantity)}</td>
+                </tr>
+            `;
+        });
+        
+        let paymentText = '';
+        switch(sale.paymentMethod) {
+            case 'cash':
+                paymentText = 'Dinheiro';
+                break;
+            case 'pix':
+                paymentText = 'Pix';
+                break;
+            case 'debit':
+                paymentText = 'Cartão de Débito';
+                break;
+            case 'credit':
+                paymentText = 'Cartão de Crédito';
+                break;
+            default:
+                paymentText = DOMPurify.sanitize(sale.paymentMethod);
+        }
+        
+        detailsHTML += `
+                </tbody>
+            </table>
+            
+            <div style="border-top: 2px solid #ddd; padding-top: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>Subtotal:</span>
+                    <span>${formatCurrency(sale.subtotal)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>Desconto:</span>
+                    <span>- ${formatCurrency(sale.discount)}</span>
+                </div>
+        `;
+        
+        if (sale.fees > 0) {
+            detailsHTML += `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>Taxas (${sale.cardFee}%):</span>
+                    <span>${formatCurrency(sale.fees)}</span>
+                </div>
+            `;
+        }
+        
+        detailsHTML += `
+                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2em; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd;">
+                    <span>TOTAL:</span>
+                    <span>${formatCurrency(sale.total)}</span>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <p><strong>Método de Pagamento:</strong> ${paymentText}</p>
+                </div>
+            </div>
+        `;
+        
+        modalContent.innerHTML = DOMPurify.sanitize(detailsHTML);
+        
+        document.getElementById('print-receipt').onclick = function() {
+            showReceipt(sale);
+        };
+        
+        showModal('sale-details-modal');
+    }
+}
+
+// ============================================
+// 13. GRÁFICOS
+// ============================================
+
+function updateMonthlySalesChart() {
+    const ctx = document.getElementById('monthlySalesChart');
+    if (!ctx) return;
+    
+    if (appState.charts.monthlySales) {
+        appState.charts.monthlySales.destroy();
+    }
+    
+    const monthlySales = {};
+    const monthlyRevenue = {};
+    
+    systemData.sales.forEach(sale => {
+        const saleDate = new Date(sale.date);
+        const monthYear = `${saleDate.getMonth() + 1}/${saleDate.getFullYear()}`;
+        
+        if (!monthlySales[monthYear]) {
+            monthlySales[monthYear] = 0;
+            monthlyRevenue[monthYear] = 0;
+        }
+        
+        monthlySales[monthYear] += 1;
+        monthlyRevenue[monthYear] += sale.total;
+    });
+    
+    const sortedMonths = Object.keys(monthlySales).sort((a, b) => {
+        const [monthA, yearA] = a.split('/').map(Number);
+        const [monthB, yearB] = b.split('/').map(Number);
+        return yearA === yearB ? monthA - monthB : yearA - yearB;
+    });
+    
+    const displayMonths = sortedMonths.slice(-6);
+    
+    const labels = displayMonths.map(month => {
+        const [monthNum, year] = month.split('/');
+        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 
+                           'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        return `${monthNames[monthNum - 1]}/${year}`;
+    });
+    
+    const salesData = displayMonths.map(month => monthlySales[month] || 0);
+    const revenueData = displayMonths.map(month => monthlyRevenue[month] || 0);
+    
+    appState.charts.monthlySales = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Número de Vendas',
+                    data: salesData,
+                    backgroundColor: 'rgba(138, 43, 226, 0.7)',
+                    borderColor: 'rgba(138, 43, 226, 1)',
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Receita (R$)',
+                    data: revenueData,
+                    backgroundColor: 'rgba(255, 107, 107, 0.7)',
+                    borderColor: 'rgba(255, 107, 107, 1)',
+                    borderWidth: 1,
+                    type: 'line',
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Número de Vendas'
+                    },
+                    ticks: {
+                        beginAtZero: true,
+                        precision: 0
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Receita (R$)'
+                    },
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function(value) {
+                            return 'R$ ' + value.toFixed(2).replace('.', ',');
+                        }
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.datasetIndex === 0) {
+                                label += context.parsed.y + ' vendas';
+                            } else {
+                                label += 'R$ ' + context.parsed.y.toFixed(2).replace('.', ',');
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateCategoryChart() {
+    const ctx = document.getElementById('categoryChart');
+    if (!ctx) return;
+    
+    if (appState.charts.categoryChart) {
+        appState.charts.categoryChart.destroy();
+    }
+    
+    const categorySales = {};
+    const categoryRevenue = {};
+    
+    systemData.sales.forEach(sale => {
+        sale.items.forEach(item => {
+            const product = systemData.products.find(p => p.id === item.productId);
+            if (product) {
+                const category = DOMPurify.sanitize(product.category);
+                if (!categorySales[category]) {
+                    categorySales[category] = 0;
+                    categoryRevenue[category] = 0;
+                }
+                categorySales[category] += item.quantity;
+                categoryRevenue[category] += item.price * item.quantity;
+            }
+        });
+    });
+    
+    const categories = Object.keys(categorySales);
+    const salesData = categories.map(cat => categorySales[cat]);
+    const revenueData = categories.map(cat => categoryRevenue[cat]);
+    
+    const categoryNames = {
+        'Shoes': 'Sapatos',
+        'Belts': 'Cintos',
+        'Bags': 'Bolsas',
+        'Activewear': 'Roupas Esportivas',
+        'Makeup': 'Maquiagem',
+        'Skincare': 'Skincare'
+    };
+    
+    const labels = categories.map(cat => categoryNames[cat] || cat);
+    
+    const backgroundColors = [
+        'rgba(138, 43, 226, 0.7)',
+        'rgba(255, 107, 107, 0.7)',
+        'rgba(76, 175, 80, 0.7)',
+        'rgba(255, 152, 0, 0.7)',
+        'rgba(33, 150, 243, 0.7)',
+        'rgba(156, 39, 176, 0.7)'
+    ];
+    
+    appState.charts.categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: revenueData,
+                backgroundColor: backgroundColors.slice(0, categories.length),
+                borderColor: backgroundColors.map(color => color.replace('0.7', '1')),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const percentage = ((value / revenueData.reduce((a, b) => a + b, 0)) * 100).toFixed(1);
+                            return `${label}: R$ ${value.toFixed(2).replace('.', ',')} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ============================================
+// 14. DASHBOARD E RELATÓRIOS
+// ============================================
+
+function updateDashboard() {
+    document.getElementById('total-products').textContent = systemData.products.length;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const todaySales = systemData.sales.filter(sale => 
+        sale.date.startsWith(today)
+    ).length;
+    document.getElementById('today-sales').textContent = todaySales;
+    
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const monthlySales = systemData.sales.filter(sale => {
+        const saleDate = new Date(sale.date);
+        return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
+    });
+    
+    const monthlyRevenue = monthlySales.reduce((sum, sale) => sum + sale.total, 0);
+    document.getElementById('monthly-revenue').textContent = formatCurrency(monthlyRevenue);
+    
+    const productSales = {};
+    systemData.sales.forEach(sale => {
+        sale.items.forEach(item => {
+            if (!productSales[item.productId]) {
+                productSales[item.productId] = 0;
+            }
+            productSales[item.productId] += item.quantity;
+        });
+    });
+    
+    let bestSellerId = null;
+    let bestSellerQty = 0;
+    
+    for (const [productId, qty] of Object.entries(productSales)) {
+        if (qty > bestSellerQty) {
+            bestSellerQty = qty;
+            bestSellerId = productId;
+        }
+    }
+    
+    if (bestSellerId) {
+        const bestProduct = systemData.products.find(p => p.id === bestSellerId);
+        if (bestProduct) {
+            const sanitizedName = DOMPurify.sanitize(bestProduct.name);
+            document.getElementById('best-seller').textContent = sanitizedName;
+            document.getElementById('best-seller-qty').textContent = bestSellerQty;
+        }
+    }
+    
+    updateRecentSales();
+}
+
+function updateRecentSales() {
+    const recentSalesBody = document.getElementById('recent-sales-body');
+    recentSalesBody.innerHTML = '';
+    
+    const sortedSales = [...systemData.sales].sort((a, b) => 
+        new Date(b.date) - new Date(a.date)
+    ).slice(0, 5);
+    
+    sortedSales.forEach(sale => {
+        const saleDate = new Date(sale.date);
+        const itemsText = sale.items.map(item => 
+            `${item.quantity}x ${DOMPurify.sanitize(item.name)}`
+        ).join(', ');
+        
+        let paymentText = '';
+        switch(sale.paymentMethod) {
+            case 'cash':
+                paymentText = 'Dinheiro';
+                break;
+            case 'pix':
+                paymentText = 'Pix';
+                break;
+            case 'debit':
+                paymentText = 'Débito';
+                break;
+            case 'credit':
+                paymentText = 'Crédito';
+                break;
+            default:
+                paymentText = DOMPurify.sanitize(sale.paymentMethod);
+        }
+        
+        const sanitizedAttendant = DOMPurify.sanitize(sale.attendant || 'Não informado');
+        
+        const row = document.createElement('tr');
+        
+        // Célula ID
+        const idCell = document.createElement('td');
+        idCell.textContent = sale.id;
+        row.appendChild(idCell);
+        
+        // Célula Data/Hora
+        const dateCell = document.createElement('td');
+        dateCell.textContent = `${saleDate.toLocaleDateString('pt-BR')} ${saleDate.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
+        row.appendChild(dateCell);
+        
+        // Célula Itens
+        const itemsCell = document.createElement('td');
+        itemsCell.textContent = itemsText;
+        row.appendChild(itemsCell);
+        
+        // Célula Total
+        const totalCell = document.createElement('td');
+        totalCell.className = 'currency';
+        totalCell.textContent = formatCurrency(sale.total);
+        row.appendChild(totalCell);
+        
+        // Célula Atendente
+        const attendantCell = document.createElement('td');
+        attendantCell.textContent = sanitizedAttendant;
+        row.appendChild(attendantCell);
+        
+        // Célula Pagamento
+        const paymentCell = document.createElement('td');
+        paymentCell.textContent = paymentText;
+        row.appendChild(paymentCell);
+        
+        recentSalesBody.appendChild(row);
+    });
+}
+
+function updateReports() {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recentSales = systemData.sales.filter(sale => 
+        new Date(sale.date) >= thirtyDaysAgo
+    );
+    
+    const totalRevenue = recentSales.reduce((sum, sale) => sum + sale.total, 0);
+    document.getElementById('report-revenue').textContent = formatCurrency(totalRevenue);
+    
+    let totalCost = 0;
+    recentSales.forEach(sale => {
+        sale.items.forEach(item => {
+            const product = systemData.products.find(p => p.id === item.productId);
+            if (product) {
+                totalCost += product.cmv * item.quantity;
+            }
+        });
+    });
+    document.getElementById('report-cost').textContent = formatCurrency(totalCost);
+    
+    const netProfit = totalRevenue - totalCost;
+    document.getElementById('report-profit').textContent = formatCurrency(netProfit);
+    
+    const lowStockProducts = systemData.products.filter(p => p.stock < 10);
+    document.getElementById('low-stock-count').textContent = lowStockProducts.length;
+    
+    if (lowStockProducts.length > 0) {
+        const lowStockNames = lowStockProducts.map(p => DOMPurify.sanitize(p.name)).slice(0, 3).join(', ');
+        document.getElementById('low-stock-list').textContent = lowStockNames + 
+            (lowStockProducts.length > 3 ? '...' : '');
+    } else {
+        document.getElementById('low-stock-list').textContent = 'Nenhum produto';
+    }
+    
+    updateTopProducts();
+}
+
+function updateTopProducts() {
+    const topProductsBody = document.getElementById('top-products-body');
+    topProductsBody.innerHTML = '';
+    
+    const productStats = {};
+    
+    systemData.sales.forEach(sale => {
+        sale.items.forEach(item => {
+            if (!productStats[item.productId]) {
+                productStats[item.productId] = {
+                    quantity: 0,
+                    revenue: 0
+                };
+            }
+            productStats[item.productId].quantity += item.quantity;
+            productStats[item.productId].revenue += item.quantity * item.price;
+        });
+    });
+    
+    const sortedProducts = Object.entries(productStats)
+        .map(([productId, stats]) => {
+            const product = systemData.products.find(p => p.id === productId);
+            return {
+                productId,
+                name: product ? DOMPurify.sanitize(product.name) : 'Produto desconhecido',
+                category: product ? DOMPurify.sanitize(product.category) : 'Desconhecida',
+                ...stats
+            };
+        })
+        .sort((a, b) => b.quantity - a.quantity)
+        .slice(0, 10);
+    
+    sortedProducts.forEach((product, index) => {
+        const row = document.createElement('tr');
+        
+        const positionCell = document.createElement('td');
+        positionCell.textContent = index + 1;
+        row.appendChild(positionCell);
+        
+        const nameCell = document.createElement('td');
+        nameCell.textContent = product.name;
+        row.appendChild(nameCell);
+        
+        const categoryCell = document.createElement('td');
+        categoryCell.textContent = getCategoryName(product.category);
+        row.appendChild(categoryCell);
+        
+        const qtyCell = document.createElement('td');
+        qtyCell.textContent = product.quantity;
+        row.appendChild(qtyCell);
+        
+        const revenueCell = document.createElement('td');
+        revenueCell.className = 'currency';
+        revenueCell.textContent = formatCurrency(product.revenue);
+        row.appendChild(revenueCell);
+        
+        const profitCell = document.createElement('td');
+        profitCell.className = 'currency';
+        profitCell.textContent = formatCurrency(product.revenue * 0.3);
+        row.appendChild(profitCell);
+        
+        topProductsBody.appendChild(row);
+    });
+}
+
+// ============================================
+// 15. CONFIGURAÇÕES
+// ============================================
+
+async function saveSettings(e) {
+    e.preventDefault();
+    
+    const debitFee = sanitizeNumber(parseFloat(document.getElementById('default-debit-fee').value));
+    const creditFee = sanitizeNumber(parseFloat(document.getElementById('default-credit-fee').value));
+    const tax = sanitizeNumber(parseFloat(document.getElementById('default-tax').value));
+    const margin = sanitizeNumber(parseFloat(document.getElementById('default-margin').value));
+    const expenses = sanitizeNumber(parseFloat(document.getElementById('monthly-expenses').value));
+    
+    if (debitFee < 0 || creditFee < 0 || tax < 0 || margin < 0 || expenses < 0) {
+        showAlert('Valores não podem ser negativos', 'error');
+        return;
+    }
+    
+    systemData.settings.defaultDebitFee = debitFee || 2.0;
+    systemData.settings.defaultCreditFee = creditFee || 4.5;
+    systemData.settings.defaultTax = tax || 6;
+    systemData.settings.defaultMargin = margin || 40;
+    systemData.settings.monthlyOperationalExpenses = expenses || 4000;
+    
+    await saveData();
+    
+    // Registrar no log de auditoria
+    if (databaseManager) {
+        await databaseManager.logAudit('settings_updated', {
+            defaultDebitFee: systemData.settings.defaultDebitFee,
+            defaultCreditFee: systemData.settings.defaultCreditFee,
+            defaultTax: systemData.settings.defaultTax,
+            defaultMargin: systemData.settings.defaultMargin,
+            monthlyOperationalExpenses: systemData.settings.monthlyOperationalExpenses
+        });
+    }
+    
+    showAlert('Configurações salvas com sucesso', 'success');
+}
+
+// ============================================
+// 16. EXPORTAÇÃO E IMPORTAÇÃO DE DADOS
+// ============================================
+
+function exportData(type = null) {
+    if (!type) {
+        type = document.getElementById('export-type').value;
+    }
+    
+    let dataToExport;
+    let filename;
+    
+    switch(type) {
+        case 'products':
+            dataToExport = { products: systemData.products };
+            filename = `camarim-produtos-${new Date().toISOString().slice(0,10)}.json`;
+            break;
+        case 'sales':
+            dataToExport = { sales: systemData.sales };
+            filename = `camarim-vendas-${new Date().toISOString().slice(0,10)}.json`;
+            break;
+        case 'all':
+        default:
+            dataToExport = systemData;
+            filename = `camarim-backup-${new Date().toISOString().slice(0,10)}.json`;
+            break;
+    }
+    
+    const dataStr = JSON.stringify(dataToExport, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    URL.revokeObjectURL(url);
+    
+    showAlert(`Dados exportados com sucesso: ${filename}`, 'success');
+    hideModal('export-modal');
+}
+
+function importData() {
+    const fileInput = document.getElementById('import-file');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        document.getElementById('import-error').classList.remove('d-none');
+        document.getElementById('import-error-message').textContent = 'Selecione um arquivo JSON para importar';
+        return;
+    }
+    
+    if (!file.name.endsWith('.json') && file.type !== 'application/json') {
+        document.getElementById('import-error').classList.remove('d-none');
+        document.getElementById('import-error-message').textContent = 'O arquivo deve ser um JSON válido';
+        return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) {
+        document.getElementById('import-error').classList.remove('d-none');
+        document.getElementById('import-error-message').textContent = 'O arquivo é muito grande. Tamanho máximo: 10MB';
+        return;
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            
+            if (!importedData.products || !Array.isArray(importedData.products)) {
+                throw new Error('Estrutura de dados inválida. O arquivo deve conter um array "products".');
+            }
+            
+            const sanitizedData = {
+                products: importedData.products.map(product => ({
+                    ...product,
+                    name: DOMPurify.sanitize(product.name || ''),
+                    category: DOMPurify.sanitize(product.category || '')
+                })),
+                sales: importedData.sales ? importedData.sales.map(sale => ({
+                    ...sale,
+                    attendant: DOMPurify.sanitize(sale.attendant || ''),
+                    items: sale.items ? sale.items.map(item => ({
+                        ...item,
+                        name: DOMPurify.sanitize(item.name || '')
+                    })) : []
+                })) : [],
+                settings: importedData.settings || {}
+            };
+            
+            if (sanitizedData.sales && Array.isArray(sanitizedData.sales)) {
+                systemData.sales = sanitizedData.sales;
+            }
+            
+            if (sanitizedData.settings && typeof sanitizedData.settings === 'object') {
+                systemData.settings = { ...systemData.settings, ...sanitizedData.settings };
+            }
+            
+            systemData.products = sanitizedData.products;
+            
+            updateProductIds();
+            updateSaleIds();
+            
+            saveData();
+            loadData();
+            updateDashboard();
+            updateMonthlySalesChart();
+            updateProductsList();
+            updateSalesList();
+            
+            showAlert('Dados importados com sucesso!', 'success');
+            hideModal('import-modal');
+            
+        } catch (error) {
+            document.getElementById('import-error').classList.remove('d-none');
+            document.getElementById('import-error-message').textContent = 
+                DOMPurify.sanitize(`Erro ao importar dados: ${error.message}`);
+            console.error('Erro na importação:', error);
+        }
+    };
+    
+    reader.onerror = function() {
+        document.getElementById('import-error').classList.remove('d-none');
+        document.getElementById('import-error-message').textContent = 'Erro ao ler o arquivo';
+    };
+    
+    reader.readAsText(file);
+}
+
+async function clearAllData() {
+    const confirmation = confirm('ATENÇÃO: Esta ação irá apagar TODOS os dados do sistema (produtos, vendas, configurações). Esta ação não pode ser desfeita. Deseja continuar?');
+    if (confirmation) {
+        try {
+            // Limpar IndexedDB se estiver disponível
+            if (databaseManager && databaseManager.deleteDatabase) {
+                await databaseManager.deleteDatabase();
+            }
+            
+            // Limpar localStorage
+            localStorage.removeItem('camarim-system-data');
+            localStorage.removeItem('camarim-backup-data');
+            localStorage.removeItem('camarim-migrated-date');
+            
+            // Recriar dados iniciais
+            createInitialData();
+            loadData();
+            updateDashboard();
+            updateMonthlySalesChart();
+            
+            showAlert('Todos os dados foram apagados e o sistema foi reinicializado', 'success');
+            
+        } catch (error) {
+            console.error('❌ Erro ao limpar dados:', error);
+            showAlert('Erro ao limpar dados: ' + error.message, 'error');
+        }
+    }
+}
+
+// ============================================
+// 17. FUNÇÕES AUXILIARES DO SISTEMA DE VENDAS
+// ============================================
+
+function showPixPayment(sale) {
+    const modalContent = document.getElementById('pix-content');
+    
+    const pixCode = generatePixCode(sale.total);
+    const pixKey = "camarim.boutique@example.com";
+    
+    let pixHTML = `
+        <div class="text-center">
+            <h4 style="margin-bottom: 20px;">Pagamento via Pix</h4>
+            <p>Valor: <strong class="currency">${formatCurrency(sale.total)}</strong></p>
+            <p>Atendente: <strong>${DOMPurify.sanitize(sale.attendant)}</strong></p>
+            
+            <div class="pix-qr-code" id="pix-qr-code"></div>
+            
+            <div class="pix-copy-code">
+                <p style="margin-bottom: 10px;">Código Pix Copia e Cola:</p>
+                <div class="pix-code">${DOMPurify.sanitize(pixCode)}</div>
+                <button class="btn btn-info btn-block" id="copy-pix-code">
+                    <i class="fas fa-copy"></i> Copiar Código
+                </button>
+            </div>
+            
+            <div class="alert alert-success mt-20">
+                <i class="fas fa-info-circle"></i>
+                <span>Após realizar o pagamento, clique em "Confirmar Pagamento"</span>
+            </div>
+        </div>
+    `;
+    
+    modalContent.innerHTML = DOMPurify.sanitize(pixHTML);
+    
+    setTimeout(() => {
+        new QRCode(document.getElementById("pix-qr-code"), {
+            text: pixCode,
+            width: 250,
+            height: 250,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    }, 100);
+    
+    const copyButton = document.getElementById('copy-pix-code');
+    if (copyButton) {
+        copyButton.addEventListener('click', function() {
+            navigator.clipboard.writeText(pixCode).then(() => {
+                showAlert('Código Pix copiado para a área de transferência!', 'success');
+            }).catch(err => {
+                console.error('Erro ao copiar:', err);
+                showAlert('Erro ao copiar código. Tente novamente.', 'error');
+            });
+        });
+    }
+    
+    showModal('pix-modal');
+}
+
+function generatePixCode(amount) {
+    if (isNaN(amount) || amount <= 0) {
+        amount = 0.01;
+    }
+    
+    const transactionId = Math.random().toString(36).substring(2, 15).toUpperCase();
+    const merchantName = "CAMARIM BOUTIQUE";
+    const merchantCity = "SAO PAULO";
+    
+    return `00020126580014BR.GOV.BCB.PIX0136${merchantName}520400005303986540${amount.toFixed(2)}5802BR5913${merchantName}6009${merchantCity}622905${transactionId}6304`;
+}
+
+function confirmPixPayment() {
+    if (appState.currentSaleData) {
+        confirmSale(appState.currentSaleData);
+        hideModal('pix-modal');
+    }
+}
+
+function printReceipt() {
+    const receiptContent = document.getElementById('receipt-content').innerHTML;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Recibo - Camarim Boutique</title>
+            <style>
+                body {
+                    font-family: 'Courier New', monospace;
+                    font-size: 12px;
+                    line-height: 1.4;
+                    margin: 0;
+                    padding: 10px;
+                    max-width: 400px;
+                    margin: 0 auto;
+                }
+                .receipt-header {
+                    text-align: center;
+                    margin-bottom: 15px;
+                    border-bottom: 1px dashed #000;
+                    padding-bottom: 10px;
+                }
+                .receipt-item {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 5px;
+                }
+                .receipt-total {
+                    border-top: 2px solid #000;
+                    margin-top: 10px;
+                    padding-top: 10px;
+                    font-weight: bold;
+                }
+                .receipt-footer {
+                    text-align: center;
+                    margin-top: 20px;
+                    font-size: 0.9em;
+                    color: #666;
+                }
+                @media print {
+                    body {
+                        margin: 0;
+                        padding: 0;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            ${receiptContent}
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() {
+                        window.close();
+                    }, 500);
+                }
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
+// ============================================
+// 18. UTILITÁRIOS
+// ============================================
+
+function showModal(modalId) {
+    const sanitizedId = DOMPurify.sanitize(modalId);
+    const modal = document.getElementById(sanitizedId);
+    if (modal) {
+        modal.classList.add('active');
+    }
+}
+
+function hideModal(modalId) {
+    const sanitizedId = DOMPurify.sanitize(modalId);
+    const modal = document.getElementById(sanitizedId);
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function showAlert(message, type = 'success') {
+    const sanitizedMessage = DOMPurify.sanitize(message);
+    
+    let alertElement, messageElement;
+    
+    if (appState.currentView === 'products') {
+        alertElement = document.getElementById('product-alert');
+        messageElement = document.getElementById('alert-message');
+    } else if (appState.currentView === 'new-product') {
+        alertElement = document.getElementById('new-product-alert');
+        messageElement = document.getElementById('new-alert-message');
+    } else if (appState.currentView === 'reports') {
+        alertElement = document.getElementById('pdf-report-alert');
+        messageElement = document.getElementById('pdf-report-message');
+    } else if (appState.currentView === 'database') {
+        alertElement = document.getElementById('db-alert');
+        messageElement = document.getElementById('db-alert-message');
+    } else {
+        const tempAlert = document.createElement('div');
+        tempAlert.className = `alert alert-${type}`;
+        tempAlert.innerHTML = DOMPurify.sanitize(`
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i>
+            <span>${sanitizedMessage}</span>
+        `);
+        tempAlert.style.position = 'fixed';
+        tempAlert.style.top = '20px';
+        tempAlert.style.right = '20px';
+        tempAlert.style.zIndex = '10000';
+        tempAlert.style.maxWidth = '400px';
+        tempAlert.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+        
+        document.body.appendChild(tempAlert);
+        
+        setTimeout(() => {
+            tempAlert.remove();
+        }, 5000);
+        
+        return;
+    }
+    
+    if (alertElement && messageElement) {
+        alertElement.className = `alert alert-${type}`;
+        
+        const icon = alertElement.querySelector('i');
+        icon.className = `fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}`;
+        
+        messageElement.textContent = sanitizedMessage;
+        alertElement.classList.remove('d-none');
+        
+        setTimeout(() => {
+            alertElement.classList.add('d-none');
+        }, 5000);
+    }
+}
+
+function formatCurrency(value) {
+    if (typeof value !== 'number' || isNaN(value)) {
+        value = 0;
+    }
+    value = Math.max(0, value);
+    return 'R$ ' + value.toFixed(2).replace('.', ',');
+}
+
+function getCategoryName(categoryCode) {
+    const categories = {
+        'Shoes': 'Sapatos',
+        'Belts': 'Cintos',
+        'Bags': 'Bolsas',
+        'Activewear': 'Roupas Esportivas',
+        'Makeup': 'Maquiagem',
+        'Skincare': 'Skincare'
+    };
+    
+    const sanitizedCode = DOMPurify.sanitize(categoryCode);
+    return categories[sanitizedCode] || sanitizedCode;
+}
+
+function getReportTypeName(type) {
+    const names = {
+        'sales': 'de Vendas',
+        'products': 'de Produtos',
+        'financial': 'Financeiro',
+        'inventory': 'de Estoque'
+    };
+    return names[type] || type;
+}
+
+function sanitizeNumber(value) {
+    if (typeof value !== 'number' || isNaN(value)) {
+        return 0;
+    }
+    if (Math.abs(value) > 1000000000) {
+        return 0;
+    }
+    return value;
+}
+
+// Funções de relatório PDF (simplificadas para o exemplo)
+function generateSalesReportPDF(doc, startDate, endDate, pageWidth, margin, yPosition, includeTables) {
+    // Implementação simplificada
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Relatório de Vendas', margin, yPosition);
+}
+
+function generateProductsReportPDF(doc, pageWidth, margin, yPosition, includeTables) {
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Relatório de Produtos', margin, yPosition);
+}
+
+function generateFinancialReportPDF(doc, startDate, endDate, pageWidth, margin, yPosition, includeCharts) {
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Relatório Financeiro', margin, yPosition);
+}
+
+function generateInventoryReportPDF(doc, pageWidth, margin, yPosition, includeTables) {
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Relatório de Estoque', margin, yPosition);
+}
+
+// Exportar funções principais para uso global
+window.CamarimSystem = {
+    showView,
+    saveData,
+    updateDashboard,
+    showAlert,
+    formatCurrency
+};
+
+console.log('✅ Sistema Camarim inicializado com sucesso!');
+    </script>
+</body>
+</html>
