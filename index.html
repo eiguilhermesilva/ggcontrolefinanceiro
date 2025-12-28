@@ -8,11 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://apis.google.com/js/api.js" async defer></script>
-    <script src="drive-backup.js"></script>
-    
     <style>
 * {
     margin: 0;
@@ -2201,50 +2196,6 @@ h1 i {
                         </div>
                     </div>
                 </div>
-
-                 <div class="backup-toggle" id="backup-toggle">
-    <div class="backup-icon">
-        <i class="fab fa-google-drive"></i>
-    </div>
-    <div class="backup-container" id="backup-container">
-        <div class="backup-header">
-            <h3><i class="fab fa-google-drive"></i> Backup Google Drive</h3>
-            <div class="backup-status" id="backup-status">
-                <i class="fas fa-circle" style="color: #e74c3c;"></i>
-                <span>Desconectado</span>
-            </div>
-        </div>
-        
-        <div class="backup-actions">
-            <button class="btn-backup-login" id="backup-login-btn">
-                <i class="fas fa-sign-in-alt"></i> Conectar ao Google Drive
-            </button>
-            
-            <div id="backup-logged-actions" style="display: none;">
-                <div class="backup-input-group">
-                    <input type="text" id="backup-description" placeholder="Descrição do backup (opcional)">
-                    <button class="btn-backup-create" id="backup-create-btn">
-                        <i class="fas fa-plus"></i> Criar Backup
-                    </button>
-                </div>
-                
-                <div class="backup-list-container">
-                    <h4><i class="fas fa-history"></i> Backups Recentes</h4>
-                    <div id="backup-list">
-                        <div class="backup-empty">
-                            <i class="fas fa-inbox"></i>
-                            <p>Nenhum backup encontrado</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <button class="btn-backup-logout" id="backup-logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Desconectar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
                 
                 <div class="date-display">
                     <i class="fas fa-calendar-alt"></i> <span id="current-date"></span>
@@ -2418,46 +2369,6 @@ h1 i {
                     </div>
                 </div>
             </div>
-
-            <div class="settings-section">
-    <div class="settings-header">
-        <div class="settings-title">
-            <i class="fab fa-google-drive"></i> Backup Google Drive
-        </div>
-    </div>
-    
-    <div class="backup-settings" style="padding: 15px; background: white; border-radius: 8px;">
-        <p>Faça backup automático dos seus dados financeiros no Google Drive.</p>
-        
-        <div id="backup-settings-status" style="margin: 15px 0; padding: 10px; border-radius: 5px; background: #f8f9fa;">
-            <i class="fas fa-circle" style="color: #e74c3c;"></i>
-            <span>Status: Desconectado do Google Drive</span>
-        </div>
-        
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <button id="backup-settings-login" class="btn" style="background: #4285F4; color: white;">
-                <i class="fab fa-google-drive"></i> Conectar ao Google Drive
-            </button>
-            <button id="backup-now" class="btn" style="background: #27ae60; color: white;">
-                <i class="fas fa-save"></i> Fazer Backup Agora
-            </button>
-        </div>
-        
-        <div class="backup-frequency" style="margin-top: 15px;">
-            <label>
-                <input type="checkbox" id="enable-auto-backup"> Backup automático
-            </label>
-            <div style="margin-top: 10px;">
-                <label>Frequência:</label>
-                <select id="backup-frequency">
-                    <option value="daily">Diariamente</option>
-                    <option value="weekly">Semanalmente</option>
-                    <option value="monthly">Mensalmente</option>
-                </select>
-            </div>
-        </div>
-    </div>
-</div>
                     <button id="reset-all-data" class="btn btn-delete" style="margin-top: 20px;">
                     <i class="fas fa-trash-alt"></i> Limpar Todos os Dados
                     </button>
@@ -6020,28 +5931,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-
-    // Backup Google Drive
-const backupNowBtn = document.getElementById('backup-now');
-const backupSettingsLoginBtn = document.getElementById('backup-settings-login');
-
-if (backupNowBtn) {
-    backupNowBtn.addEventListener('click', async function() {
-        if (window.FinanceBackup && window.FinanceBackup.isConnected()) {
-            await window.FinanceBackup.createBackup('backup_manual');
-        } else {
-            alert('Conecte-se ao Google Drive primeiro!');
-        }
-    });
-}
-
-if (backupSettingsLoginBtn) {
-    backupSettingsLoginBtn.addEventListener('click', function() {
-        if (window.FinanceBackup) {
-            window.FinanceBackup.login();
-        }
-    });
-}
 </script>
 </body>
 </html>
