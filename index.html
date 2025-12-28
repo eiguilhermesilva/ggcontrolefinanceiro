@@ -6020,6 +6020,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+    // Backup Google Drive
+const backupNowBtn = document.getElementById('backup-now');
+const backupSettingsLoginBtn = document.getElementById('backup-settings-login');
+
+if (backupNowBtn) {
+    backupNowBtn.addEventListener('click', async function() {
+        if (window.FinanceBackup && window.FinanceBackup.isConnected()) {
+            await window.FinanceBackup.createBackup('backup_manual');
+        } else {
+            alert('Conecte-se ao Google Drive primeiro!');
+        }
+    });
+}
+
+if (backupSettingsLoginBtn) {
+    backupSettingsLoginBtn.addEventListener('click', function() {
+        if (window.FinanceBackup) {
+            window.FinanceBackup.login();
+        }
+    });
+}
 </script>
 </body>
 </html>
