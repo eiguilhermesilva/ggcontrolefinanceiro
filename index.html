@@ -2418,6 +2418,46 @@ h1 i {
                     </div>
                 </div>
             </div>
+
+            <div class="settings-section">
+    <div class="settings-header">
+        <div class="settings-title">
+            <i class="fab fa-google-drive"></i> Backup Google Drive
+        </div>
+    </div>
+    
+    <div class="backup-settings" style="padding: 15px; background: white; border-radius: 8px;">
+        <p>Faça backup automático dos seus dados financeiros no Google Drive.</p>
+        
+        <div id="backup-settings-status" style="margin: 15px 0; padding: 10px; border-radius: 5px; background: #f8f9fa;">
+            <i class="fas fa-circle" style="color: #e74c3c;"></i>
+            <span>Status: Desconectado do Google Drive</span>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button id="backup-settings-login" class="btn" style="background: #4285F4; color: white;">
+                <i class="fab fa-google-drive"></i> Conectar ao Google Drive
+            </button>
+            <button id="backup-now" class="btn" style="background: #27ae60; color: white;">
+                <i class="fas fa-save"></i> Fazer Backup Agora
+            </button>
+        </div>
+        
+        <div class="backup-frequency" style="margin-top: 15px;">
+            <label>
+                <input type="checkbox" id="enable-auto-backup"> Backup automático
+            </label>
+            <div style="margin-top: 10px;">
+                <label>Frequência:</label>
+                <select id="backup-frequency">
+                    <option value="daily">Diariamente</option>
+                    <option value="weekly">Semanalmente</option>
+                    <option value="monthly">Mensalmente</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
                     <button id="reset-all-data" class="btn btn-delete" style="margin-top: 20px;">
                     <i class="fas fa-trash-alt"></i> Limpar Todos os Dados
                     </button>
